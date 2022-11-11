@@ -18,17 +18,20 @@ struct TickerView: View {
 	var currentTicker: Ticker? { tickers.isEmpty ? nil : tickers[selectedTicker] }
 	
     var body: some View {
-		VStack(alignment: .trailing, spacing: 0) {
-			ForEach(0..<Int(tickers.count), id: \.self) { i in
-				Text(tickers[i].name + " " + String(format: "%01d.%02d", tickers[i].time.0, (tickers[i].time.1*100)/36 % 100))
-					.bold(isActive && i == selectedTicker)
-					.opacity(tickers[i].active ? 1 : (isActive ? 0.3 : 0))
+		VStack(spacing: 0) {
+			Spacer()
+			VStack(alignment: .trailing, spacing: 0) {
+				ForEach(0..<Int(tickers.count), id: \.self) { i in
+					Text(tickers[i].name + " " + String(format: "%01d.%02d", tickers[i].time.0, (tickers[i].time.1*100)/3600 % 100))
+						.bold(isActive && i == selectedTicker)
+						.opacity(tickers[i].active ? 1 : (isActive ? 0.3 : 0))
+				}
+				Text("     " + String(format: "%01d.%02d", time.0, (time.1*100)/3600 % 100))
+				Spacer().frame(height: (updater ? 2 : 2))
 			}
-			Text("     " + String(format: "%01d.%02d", time.0, (time.1*100)/3600 % 100))
-			Spacer().frame(height: (updater ? 2 : 2))
+			.fixedSize()
 		}
-		.fixedSize()
-		
+		.frame(height: 500)
 		.onReceive(NotificationCenter.default.publisher( for: NSApplication.didBecomeActiveNotification)) { _ in
 			isActive = true
 		}
@@ -67,6 +70,16 @@ struct TickerView: View {
 			} else {
 				currentTicker?.start = Date()
 			}
+		} else if event.characters == "+" {
+			currentTicker?.posOffset = true
+			currentTicker?.equivalentOffset = false
+			currentTicker?.offsetChange = ""
+		} else if event.characters == "-" {
+			currentTicker?.posOffset = false
+			currentTicker?.equivalentOffset = false
+			currentTicker?.offsetChange = ""
+		} else if event.characters == "=" {
+			currentTicker?.equivalentOffset.toggle()
 		} else if event.specialKey == .upArrow {
 			selectedTicker = max(0, selectedTicker - 1)
 		} else if event.specialKey == .downArrow {
@@ -96,6 +109,9 @@ class Ticker {
 	var start: Date?
 	var name: String
 	var offset: Int
+	var offsetChange: String? = nil
+	var posOffset: Bool = false
+	var equivalentOffset: Bool = false
 	var active: Bool { start != nil }
 	var time: (Int, Int) {
 		let total: Int

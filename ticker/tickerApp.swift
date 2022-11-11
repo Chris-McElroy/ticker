@@ -13,7 +13,7 @@ struct tickerApp: App {
 	@NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 	
     var body: some Scene {
-        WindowGroup {
+		WindowGroup() {
 			TickerView()
         }
 		.windowResizability(.contentSize)
@@ -49,10 +49,6 @@ class StatusBarController {
 			NSApplication.shared.activate(ignoringOtherApps: true)
 		}
 	}
-	
-	@objc func something() {
-		print("printing")
-	}
 }
 
 class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
@@ -81,21 +77,24 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 		return
 	}
 	
-	func windowWillResize(_ sender: NSWindow, to frameSize: NSSize) -> NSSize {
-		print("resizing")
-		if let window = NSApplication.shared.windows.first {
-			window.moveUp(sender)
-		}
-		return frameSize
-	}
-	
-	func windowWillMove(_ notification: Notification) {
-		print("moving")
-	}
-	
-	func windowWillStartLiveResize(_ notification: Notification) {
-		print("hiwoef")
-	}
+//	// https://stackoverflow.com/questions/70091919/how-set-position-of-window-on-the-desktop-in-swiftui
+//	func fakeWindowPositionPreferences() {
+//		guard let main = NSScreen.main else { return }
+//
+//		let screenWidth = main.frame.width
+//		let screenHeightWithoutMenuBar = main.frame.height - 32 // menu bar
+//		let visibleFrame = main.visibleFrame
+//
+//		let contentWidth: CGFloat = 100
+//		let contentHeight: CGFloat = 200 + 28 // window title bar
+//
+//		let windowX = visibleFrame.midX - contentWidth/2
+//		let windowY = visibleFrame.midY - contentHeight/2
+//
+//		let newFramePreference = "\(Int(windowX)) \(Int(windowY)) \(Int(contentWidth)) \(Int(contentHeight)) 0 0 \(Int(screenWidth)) \(Int(screenHeightWithoutMenuBar))"
+//		print("new frame:", newFramePreference)
+//		UserDefaults.standard.set("1450 0 44 126 0 0 1512 950 ", forKey: "NSWindow Frame cornerPos")
+//	}
 	
 	func windowShouldClose(_ sender: NSWindow) -> Bool {
 		deleteTimer()

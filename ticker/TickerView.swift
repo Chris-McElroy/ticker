@@ -9,7 +9,6 @@ import SwiftUI
 import Combine
 
 struct TickerView: View {
-	@State var time: (Int, Int) = TickerView.getCurrentTime()
 	@State var tickers: [Ticker] = []
 	@State var selectedTicker: Int = 0
 	@State var isActive: Bool = false
@@ -18,40 +17,41 @@ struct TickerView: View {
 	var currentTicker: Ticker? { tickers.isEmpty ? nil : tickers[selectedTicker] }
 	
     var body: some View {
-		VStack(spacing: 0) {
+		HStack {
 			Spacer()
-			VStack(alignment: .trailing, spacing: 0) {
-				ForEach(0..<Int(tickers.count), id: \.self) { i in
-					Text(tickers[i].name + " " + String(format: "%01d.%02d", tickers[i].time.0, (tickers[i].time.1*100)/3600 % 100))
-						.bold(isActive && i == selectedTicker)
-						.opacity(tickers[i].active ? 1 : (isActive ? 0.3 : 0))
+			VStack(spacing: 0) {
+				Spacer()
+				VStack(alignment: .trailing, spacing: 0) {
+					ForEach(0..<Int(tickers.count), id: \.self) { i in
+						Text(tickers[i].string)
+							.bold(isActive && i == selectedTicker)
+							.opacity(tickers[i].active ? 1 : (isActive ? 0.3 : 0))
+					}
+					Text(getCurrentTime())
+					Spacer().frame(height: (updater ? 2 : 2))
 				}
-				Text("     " + String(format: "%01d.%02d", time.0, (time.1*100)/3600 % 100))
-				Spacer().frame(height: (updater ? 2 : 2))
+				.fixedSize()
 			}
-			.fixedSize()
 		}
-		.frame(height: 500)
+		.frame(width: 500, height: 500)
 		.onReceive(NotificationCenter.default.publisher( for: NSApplication.didBecomeActiveNotification)) { _ in
 			isActive = true
 		}
 		.onReceive(NotificationCenter.default.publisher( for: NSApplication.didResignActiveNotification)) { _ in
 			isActive = false
 			tickers = tickers.filter { !$0.active } + tickers.filter { $0.active }
+			for ticker in tickers {
+				ticker.resolveOffset()
+			}
 		}
 		.background(KeyPressHelper(keyDownFunc))
 		.onAppear {
 			deleteTimer = deleteTimerFunc
-			Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true, block: { _ in
-				time = TickerView.getCurrentTime()
+			Timer.scheduledTimer(withTimeInterval: 0.2, repeats: true, block: { _ in
+				updater.toggle()
 			})
 		}
     }
-	
-	static func getCurrentTime() -> (Int, Int) {
-		let comp = Calendar.current.dateComponents([.hour, .minute, .second], from: .now)
-		return ((comp.hour ?? 0) % 12, (comp.minute ?? 0)*60 + (comp.second ?? 0))
-	}
 	
 	func keyDownFunc(event: NSEvent) {
 		updater.toggle()
@@ -65,7 +65,7 @@ struct TickerView: View {
 		
 		if event.characters == " " {
 			if let start = currentTicker?.start {
-				currentTicker?.offset += Int(Date().timeIntervalSince(start))
+				currentTicker?.offset += Date().timeIntervalSince(start)
 				currentTicker?.start = nil
 			} else {
 				currentTicker?.start = Date()
@@ -89,11 +89,23 @@ struct TickerView: View {
 		} else if event.specialKey == .backTab {
 			selectedTicker = (tickers.count + selectedTicker - 1) % tickers.count
 		} else if event.specialKey == .delete {
-			if !(currentTicker?.name.isEmpty ?? false) {
+			if currentTicker?.offsetChange != nil {
+				if !(currentTicker?.offsetChange?.isEmpty ?? true) {
+					currentTicker?.offsetChange?.removeLast()
+				}
+			} else if !(currentTicker?.name.isEmpty ?? true) {
 				currentTicker?.name.removeLast()
 			}
+		} else if event.specialKey == .carriageReturn {
+			currentTicker?.resolveOffset()
 		} else if event.specialKey == nil {
-			currentTicker?.name += event.characters ?? ""
+			if currentTicker?.offsetChange != nil {
+				for c in (event.characters ?? "").filter({ "0123456789.".contains($0) }) {
+					currentTicker?.offsetChange?.append(c)
+				}
+			} else {
+				currentTicker?.name += event.characters ?? ""
+			}
 		}
 	}
 	
@@ -105,24 +117,66 @@ struct TickerView: View {
 	}
 }
 
+func getCurrentTime() -> String {
+	let comp = Calendar.current.dateComponents([.hour, .minute, .second], from: .now)
+	let hour = comp.hour ?? 0
+	let fraction = ((comp.minute ?? 0)*60 + (comp.second ?? 0))/36
+	return String(format: "%01d.%02d", hour, fraction)
+}
+
 class Ticker {
 	var start: Date?
 	var name: String
-	var offset: Int
+	var offset: Double
 	var offsetChange: String? = nil
 	var posOffset: Bool = false
 	var equivalentOffset: Bool = false
 	var active: Bool { start != nil }
-	var time: (Int, Int) {
-		let total: Int
-		if let start { total = Int(Date().timeIntervalSince(start)) + offset }
-		else { total = offset }
-		return (total / 3600, total % 3600)
-	}
 	
 	init() {
 		start = Date.now
 		name = ""
 		offset = 0
+	}
+	
+	var string: String {
+		var fullString = name
+		
+		let total: Double
+		if let start { total = Date().timeIntervalSince(start) + offset }
+		else { total = offset }
+		let hours = total/3600
+		
+		fullString += " " + String(format: "%.2f", hours)
+		
+		if let offsetChange {
+			if equivalentOffset {
+				fullString += " " + (posOffset ? "+" : "-") + " " + getCurrentTime() + " " + (posOffset ? "-" : "+") + " " + offsetChange
+			} else {
+				fullString += " " + (posOffset ? "+" : "-") + " " + offsetChange
+			}
+		}
+		
+		return fullString
+	}
+	
+	func resolveOffset() {
+		guard let offsetChange else { return }
+		
+		print("bop", offsetChange, Double(offsetChange) ?? 0)
+		
+		var newOffset = (Double(offsetChange) ?? 0)
+		
+		if equivalentOffset {
+			newOffset = (Double(getCurrentTime()) ?? 0) - newOffset
+		}
+		
+		if posOffset {
+			offset += newOffset*3600
+		} else {
+			offset -= newOffset*3600
+		}
+		
+		self.offsetChange = nil
 	}
 }

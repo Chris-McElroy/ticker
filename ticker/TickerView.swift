@@ -60,7 +60,7 @@ struct TickerView: View {
 		if event.modifierFlags.contains(.command) {
 			if event.characters == "e" {
 				tickers = [Ticker()] + tickers
-				selectedTicker = tickers.count - 1
+				selectedTicker = 0
 				storeTickers()
 				Storage.set(selectedTicker, for: .selected)
 			}

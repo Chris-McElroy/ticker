@@ -9,8 +9,8 @@ import SwiftUI
 import Combine
 
 struct TickerView: View {
-	@State var tickers: [Ticker] = []
-	@State var selectedTicker: Int = 0
+	@State var tickers: [Ticker] = Storage.tickerArray().compactMap { Ticker(from: $0) }
+	@State var selectedTicker: Int = Storage.int(.selected)
 	@State var isActive: Bool = false
 	@State var updater: Bool = false
 	
@@ -43,6 +43,7 @@ struct TickerView: View {
 			for ticker in tickers {
 				ticker.resolveOffset()
 			}
+			storeTickers()
 		}
 		.background(KeyPressHelper(keyDownFunc))
 		.onAppear {
@@ -59,6 +60,9 @@ struct TickerView: View {
 		if event.modifierFlags.contains(.command) {
 			if event.characters == "e" {
 				tickers = [Ticker()] + tickers
+				selectedTicker = tickers.count - 1
+				storeTickers()
+				Storage.set(selectedTicker, for: .selected)
 			}
 			return
 		}
@@ -70,6 +74,7 @@ struct TickerView: View {
 			} else {
 				currentTicker?.start = Date()
 			}
+			storeTickers()
 		} else if event.characters == "+" {
 			currentTicker?.posOffset = true
 			currentTicker?.equivalentOffset = false
@@ -82,12 +87,16 @@ struct TickerView: View {
 			currentTicker?.equivalentOffset.toggle()
 		} else if event.specialKey == .upArrow {
 			selectedTicker = max(0, selectedTicker - 1)
+			Storage.set(selectedTicker, for: .selected)
 		} else if event.specialKey == .downArrow {
 			selectedTicker = min(tickers.count - 1, selectedTicker + 1)
+			Storage.set(selectedTicker, for: .selected)
 		} else if event.specialKey == .tab {
 			selectedTicker = (selectedTicker + 1) % tickers.count
+			Storage.set(selectedTicker, for: .selected)
 		} else if event.specialKey == .backTab {
 			selectedTicker = (tickers.count + selectedTicker - 1) % tickers.count
+			Storage.set(selectedTicker, for: .selected)
 		} else if event.specialKey == .delete {
 			if currentTicker?.offsetChange != nil {
 				if !(currentTicker?.offsetChange?.isEmpty ?? true) {
@@ -95,9 +104,11 @@ struct TickerView: View {
 				}
 			} else if !(currentTicker?.name.isEmpty ?? true) {
 				currentTicker?.name.removeLast()
+				storeTickers()
 			}
 		} else if event.specialKey == .carriageReturn {
 			currentTicker?.resolveOffset()
+			storeTickers()
 		} else if event.specialKey == nil {
 			if currentTicker?.offsetChange != nil {
 				for c in (event.characters ?? "").filter({ "0123456789.".contains($0) }) {
@@ -105,6 +116,7 @@ struct TickerView: View {
 				}
 			} else {
 				currentTicker?.name += event.characters ?? ""
+				storeTickers()
 			}
 		}
 	}
@@ -113,7 +125,13 @@ struct TickerView: View {
 		if tickers.count > selectedTicker {
 			tickers.remove(at: selectedTicker)
 			selectedTicker %= max(1, tickers.count)
+			storeTickers()
+			Storage.set(selectedTicker, for: .selected)
 		}
+	}
+	
+	func storeTickers() {
+		Storage.set(tickers.map { $0.toDict() }, for: .tickers)
 	}
 }
 
@@ -137,6 +155,15 @@ class Ticker {
 		start = Date.now
 		name = ""
 		offset = 0
+	}
+	
+	init?(from dict: [String: Any]) {
+		guard let startTime = dict[Key.start.rawValue] as? Double else { return nil }
+		guard let name = dict[Key.name.rawValue] as? String else { return nil }
+		guard let offset = dict[Key.offset.rawValue] as? Double else { return nil }
+		start = startTime == 0 ? nil : Date(timeIntervalSinceReferenceDate: startTime)
+		self.name = name
+		self.offset = offset
 	}
 	
 	var string: String {
@@ -178,5 +205,13 @@ class Ticker {
 		}
 		
 		self.offsetChange = nil
+	}
+	
+	func toDict() -> [String: Any] {
+		[
+			Key.start.rawValue: start?.timeIntervalSinceReferenceDate ?? 0,
+			Key.name.rawValue: name,
+			Key.offset.rawValue: offset
+		]
 	}
 }

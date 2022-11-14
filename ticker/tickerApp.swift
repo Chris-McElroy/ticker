@@ -17,7 +17,6 @@ struct tickerApp: App {
 			TickerView()
         }
 		.windowResizability(.contentSize)
-	
     }
 }
 

@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1E88C96F2922EBE700E603EA /* StorageHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E88C96E2922EBE700E603EA /* StorageHelper.swift */; };
 		1E9BD80A291DB9F200924734 /* KeyPressHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E9BD809291DB9F200924734 /* KeyPressHelper.swift */; };
 		1EE25A32291D2AF100F2A038 /* tickerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EE25A31291D2AF100F2A038 /* tickerApp.swift */; };
 		1EE25A34291D2AF100F2A038 /* TickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EE25A33291D2AF100F2A038 /* TickerView.swift */; };
@@ -16,6 +17,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		1E88C96E2922EBE700E603EA /* StorageHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageHelper.swift; sourceTree = "<group>"; };
 		1E9BD809291DB9F200924734 /* KeyPressHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyPressHelper.swift; sourceTree = "<group>"; };
 		1EE25A2E291D2AF100F2A038 /* ticker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ticker.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		1EE25A31291D2AF100F2A038 /* tickerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = tickerApp.swift; sourceTree = "<group>"; };
@@ -57,6 +59,7 @@
 			isa = PBXGroup;
 			children = (
 				1EE25A31291D2AF100F2A038 /* tickerApp.swift */,
+				1E88C96E2922EBE700E603EA /* StorageHelper.swift */,
 				1EE25A33291D2AF100F2A038 /* TickerView.swift */,
 				1E9BD809291DB9F200924734 /* KeyPressHelper.swift */,
 				1EE25A35291D2AF200F2A038 /* Assets.xcassets */,
@@ -153,6 +156,7 @@
 				1E9BD80A291DB9F200924734 /* KeyPressHelper.swift in Sources */,
 				1EE25A34291D2AF100F2A038 /* TickerView.swift in Sources */,
 				1EE25A32291D2AF100F2A038 /* tickerApp.swift in Sources */,
+				1E88C96F2922EBE700E603EA /* StorageHelper.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

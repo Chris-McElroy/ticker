@@ -13,6 +13,7 @@ struct TickerView: View {
 	@State var selectedTicker: Int = Storage.int(.selected)
 	@State var isActive: Bool = false
 	@State var updater: Bool = false
+	@State var remainingPower: Int = getRemainingPower()
 	
 	var currentTicker: Ticker? { tickers.isEmpty ? nil : tickers[selectedTicker] }
 	
@@ -27,7 +28,7 @@ struct TickerView: View {
 							.bold(isActive && i == selectedTicker)
 							.opacity(tickers[i].active ? 1 : (isActive ? 0.3 : 0))
 					}
-					Text(getCurrentTime())
+					getTimeView()
 					Spacer().frame(height: (updater ? 2 : 2))
 				}
 				.fixedSize()
@@ -51,8 +52,26 @@ struct TickerView: View {
 			Timer.scheduledTimer(withTimeInterval: 0.2, repeats: true, block: { _ in
 				updater.toggle()
 			})
+			Timer.scheduledTimer(withTimeInterval: 100, repeats: true, block: { _ in
+				remainingPower = getRemainingPower()
+			})
 		}
     }
+	
+	func getTimeView() -> some View {
+		let time = getCurrentTime().split(separator: ".")
+		let power = remainingPower
+		let color: Color
+		
+		switch power {
+		case 80...100: color = Color(.displayP3, red: 0, green: 1, blue: 1)
+		case 50..<80: color = .white
+		case 20..<50: color = Color(.displayP3, red: 1.0, green: 0.75, blue: 0.0, opacity: 1.0)
+		default: color = Color(.displayP3, red: 1, green: 0.0, blue: 0.0, opacity: 1.0)
+		}
+		
+		return Text(time[0]) + Text(".").foregroundColor(color) + Text(time[1])
+	}
 	
 	func keyDownFunc(event: NSEvent) {
 		updater.toggle()

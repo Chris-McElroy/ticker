@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		1E88C96F2922EBE700E603EA /* StorageHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E88C96E2922EBE700E603EA /* StorageHelper.swift */; };
 		1E9BD80A291DB9F200924734 /* KeyPressHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E9BD809291DB9F200924734 /* KeyPressHelper.swift */; };
+		1EB35D73292629BC0031101C /* PowerHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EB35D72292629BC0031101C /* PowerHelper.swift */; };
 		1EE25A32291D2AF100F2A038 /* tickerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EE25A31291D2AF100F2A038 /* tickerApp.swift */; };
 		1EE25A34291D2AF100F2A038 /* TickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EE25A33291D2AF100F2A038 /* TickerView.swift */; };
 		1EE25A36291D2AF200F2A038 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1EE25A35291D2AF200F2A038 /* Assets.xcassets */; };
@@ -19,6 +20,7 @@
 /* Begin PBXFileReference section */
 		1E88C96E2922EBE700E603EA /* StorageHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageHelper.swift; sourceTree = "<group>"; };
 		1E9BD809291DB9F200924734 /* KeyPressHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyPressHelper.swift; sourceTree = "<group>"; };
+		1EB35D72292629BC0031101C /* PowerHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PowerHelper.swift; sourceTree = "<group>"; };
 		1EE25A2E291D2AF100F2A038 /* ticker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ticker.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		1EE25A31291D2AF100F2A038 /* tickerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = tickerApp.swift; sourceTree = "<group>"; };
 		1EE25A33291D2AF100F2A038 /* TickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TickerView.swift; sourceTree = "<group>"; };
@@ -59,6 +61,7 @@
 			isa = PBXGroup;
 			children = (
 				1EE25A31291D2AF100F2A038 /* tickerApp.swift */,
+				1EB35D72292629BC0031101C /* PowerHelper.swift */,
 				1E88C96E2922EBE700E603EA /* StorageHelper.swift */,
 				1EE25A33291D2AF100F2A038 /* TickerView.swift */,
 				1E9BD809291DB9F200924734 /* KeyPressHelper.swift */,
@@ -157,6 +160,7 @@
 				1EE25A34291D2AF100F2A038 /* TickerView.swift in Sources */,
 				1EE25A32291D2AF100F2A038 /* tickerApp.swift in Sources */,
 				1E88C96F2922EBE700E603EA /* StorageHelper.swift in Sources */,
+				1EB35D73292629BC0031101C /* PowerHelper.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

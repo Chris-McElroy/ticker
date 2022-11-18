@@ -9,12 +9,14 @@ import SwiftUI
 import Combine
 
 struct TickerView: View {
-	@State var tickers: [Ticker] = Storage.tickerArray().compactMap { Ticker(from: $0) }
+	@State var tickerHistory: [[Ticker]] = [Storage.tickerArray().compactMap { Ticker(from: $0) }]
+	@State var versionsBack: Int = 0
 	@State var selectedTicker: Int = Storage.int(.selected)
 	@State var isActive: Bool = false
 	@State var updater: Bool = false
 	@State var remainingPower: Int = getRemainingPower()
 	
+	var tickers: [Ticker] { tickerHistory[tickerHistory.count - 1 - versionsBack] }
 	var currentTicker: Ticker? { tickers.isEmpty ? nil : tickers[selectedTicker] }
 	
     var body: some View {
@@ -40,11 +42,11 @@ struct TickerView: View {
 		}
 		.onReceive(NotificationCenter.default.publisher( for: NSApplication.didResignActiveNotification)) { _ in
 			isActive = false
-			tickers = tickers.filter { !$0.active } + tickers.filter { $0.active }
 			for ticker in tickers {
-				ticker.resolveOffset()
+				ticker.offsetResolved()
 			}
-			storeTickers()
+			setTickers(tickers.filter { !$0.active } + tickers.filter { $0.active })
+			// TODO STS
 		}
 		.background(KeyPressHelper(keyDownFunc))
 		.onAppear {
@@ -57,6 +59,23 @@ struct TickerView: View {
 			})
 		}
     }
+	
+	func setTickers(_ newTickers: [Ticker]) {
+		if versionsBack != 0 {
+			tickerHistory.removeLast(versionsBack)
+			versionsBack = 0
+		}
+		tickerHistory.append(newTickers)
+		storeTickers()
+	}
+	
+	func setCurrentTicker(_ newValue: Ticker?) {
+		guard let newValue else { return }
+		if tickers.isEmpty { return }
+		var newTickers = tickers
+		newTickers[selectedTicker] = newValue
+		setTickers(newTickers)
+	}
 	
 	func getTimeView() -> some View {
 		let time = getCurrentTime().split(separator: ".")
@@ -78,22 +97,15 @@ struct TickerView: View {
 		
 		if event.modifierFlags.contains(.command) {
 			if event.characters == "e" {
-				tickers = [Ticker()] + tickers
+				setTickers([Ticker()] + tickers)
 				selectedTicker = 0
-				storeTickers()
 				Storage.set(selectedTicker, for: .selected)
 			}
 			return
 		}
 		
 		if event.characters == " " {
-			if let start = currentTicker?.start {
-				currentTicker?.offset += Date().timeIntervalSince(start)
-				currentTicker?.start = nil
-			} else {
-				currentTicker?.start = Date()
-			}
-			storeTickers()
+			setCurrentTicker(currentTicker?.activityToggled())
 		} else if event.characters == "+" {
 			currentTicker?.posOffset = true
 			currentTicker?.equivalentOffset = false
@@ -161,19 +173,25 @@ func getCurrentTime() -> String {
 	return String(format: "%01d.%02d", hour, fraction)
 }
 
-class Ticker {
-	var start: Date?
-	var name: String
-	var offset: Double
-	var offsetChange: String? = nil
-	var posOffset: Bool = false
-	var equivalentOffset: Bool = false
+struct Ticker {
+	let name: String
+	let start: Date?
+	let offset: Double
+	@State var offsetChange: String? = nil
+	@State var posOffset: Bool = false
+	@State var equivalentOffset: Bool = false
 	var active: Bool { start != nil }
 	
 	init() {
-		start = Date.now
 		name = ""
+		start = Date.now
 		offset = 0
+	}
+	
+	init(name: String, start: Date?, offset: Double) {
+		self.name = name
+		self.start = start
+		self.offset = offset
 	}
 	
 	init?(from dict: [String: Any]) {
@@ -206,24 +224,30 @@ class Ticker {
 		return fullString
 	}
 	
-	func resolveOffset() {
-		guard let offsetChange else { return }
-		
-		print("bop", offsetChange, Double(offsetChange) ?? 0)
+	func offsetResolved() -> Ticker {
+		guard let offsetChange else { return self }
 		
 		var newOffset = (Double(offsetChange) ?? 0)
-		
 		if equivalentOffset {
 			newOffset = (Double(getCurrentTime()) ?? 0) - newOffset
 		}
 		
+		let totalOffsetChange: Double
 		if posOffset {
-			offset += newOffset*3600
+			totalOffsetChange = newOffset*3600
 		} else {
-			offset -= newOffset*3600
+			totalOffsetChange = -newOffset*3600
 		}
 		
-		self.offsetChange = nil
+		return Ticker(name: name, start: start, offset: offset + totalOffsetChange)
+	}
+	
+	func activityToggled() -> Ticker {
+		if let start {
+			return Ticker(name: name, start: nil, offset: Date().timeIntervalSince(start))
+		} else {
+			return Ticker(name: name, start: Date(), offset: offset)
+		}
 	}
 	
 	func toDict() -> [String: Any] {

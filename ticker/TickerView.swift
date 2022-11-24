@@ -42,11 +42,17 @@ struct TickerView: View {
 		}
 		.onReceive(NotificationCenter.default.publisher( for: NSApplication.didResignActiveNotification)) { _ in
 			isActive = false
-			for ticker in tickers {
-				ticker.offsetResolved()
+			let topActive = tickers.firstIndex(where: { $0.active }) ?? tickers.count
+			let bottomInactive = tickers.lastIndex(where: { !$0.active }) ?? 0
+			guard tickers.contains(where: { $0.offsetChange != nil }) || topActive < bottomInactive else { return }
+			let lastCurrentTicker = currentTicker
+			var newTickers = tickers
+			for (i, ticker) in newTickers.enumerated() {
+				newTickers[i] = ticker.offsetResolved()
 			}
-			setTickers(tickers.filter { !$0.active } + tickers.filter { $0.active })
-			// TODO STS
+			setTickers(newTickers.filter({ !$0.active }) + newTickers.filter({ $0.active }))
+			selectedTicker = tickers.firstIndex(where: { $0 === lastCurrentTicker }) ?? selectedTicker
+			Storage.set(selectedTicker, for: .selected)
 		}
 		.background(KeyPressHelper(keyDownFunc))
 		.onAppear {
@@ -100,22 +106,30 @@ struct TickerView: View {
 				setTickers([Ticker()] + tickers)
 				selectedTicker = 0
 				Storage.set(selectedTicker, for: .selected)
+			} else if event.characters == "z" {
+				if event.modifierFlags.contains(.shift) {
+					versionsBack = max(versionsBack - 1, 0)
+				} else {
+					versionsBack = min(versionsBack + 1, tickerHistory.count - 1)
+				}
 			}
 			return
 		}
 		
+		guard let currentTicker else { return }
+		
 		if event.characters == " " {
-			setCurrentTicker(currentTicker?.activityToggled())
+			setCurrentTicker(currentTicker.activityToggled())
 		} else if event.characters == "+" {
-			currentTicker?.posOffset = true
-			currentTicker?.equivalentOffset = false
-			currentTicker?.offsetChange = ""
+			currentTicker.posOffset = true
+			currentTicker.equivalentOffset = false
+			currentTicker.offsetChange = ""
 		} else if event.characters == "-" {
-			currentTicker?.posOffset = false
-			currentTicker?.equivalentOffset = false
-			currentTicker?.offsetChange = ""
+			currentTicker.posOffset = false
+			currentTicker.equivalentOffset = false
+			currentTicker.offsetChange = ""
 		} else if event.characters == "=" {
-			currentTicker?.equivalentOffset.toggle()
+			currentTicker.equivalentOffset.toggle()
 		} else if event.specialKey == .upArrow {
 			selectedTicker = max(0, selectedTicker - 1)
 			Storage.set(selectedTicker, for: .selected)
@@ -129,34 +143,32 @@ struct TickerView: View {
 			selectedTicker = (tickers.count + selectedTicker - 1) % tickers.count
 			Storage.set(selectedTicker, for: .selected)
 		} else if event.specialKey == .delete {
-			if currentTicker?.offsetChange != nil {
-				if !(currentTicker?.offsetChange?.isEmpty ?? true) {
-					currentTicker?.offsetChange?.removeLast()
+			if currentTicker.offsetChange != nil {
+				if !(currentTicker.offsetChange?.isEmpty ?? true) {
+					currentTicker.offsetChange?.removeLast()
 				}
-			} else if !(currentTicker?.name.isEmpty ?? true) {
-				currentTicker?.name.removeLast()
-				storeTickers()
+			} else if !currentTicker.name.isEmpty {
+				currentTicker.name.removeLast()
 			}
 		} else if event.specialKey == .carriageReturn {
-			currentTicker?.resolveOffset()
-			storeTickers()
+			setCurrentTicker(currentTicker.offsetResolved())
 		} else if event.specialKey == nil {
-			if currentTicker?.offsetChange != nil {
+			if currentTicker.offsetChange != nil {
 				for c in (event.characters ?? "").filter({ "0123456789.".contains($0) }) {
-					currentTicker?.offsetChange?.append(c)
+					currentTicker.offsetChange?.append(c)
 				}
 			} else {
-				currentTicker?.name += event.characters ?? ""
-				storeTickers()
+				currentTicker.name += event.characters ?? ""
 			}
 		}
 	}
 	
 	func deleteTimerFunc() {
 		if tickers.count > selectedTicker {
-			tickers.remove(at: selectedTicker)
-			selectedTicker %= max(1, tickers.count)
-			storeTickers()
+			var newTickers = tickers
+			newTickers.remove(at: selectedTicker)
+			selectedTicker %= max(1, newTickers.count)
+			setTickers(newTickers)
 			Storage.set(selectedTicker, for: .selected)
 		}
 	}
@@ -173,13 +185,13 @@ func getCurrentTime() -> String {
 	return String(format: "%01d.%02d", hour, fraction)
 }
 
-struct Ticker {
-	let name: String
+class Ticker {
+	var name: String
 	let start: Date?
 	let offset: Double
-	@State var offsetChange: String? = nil
-	@State var posOffset: Bool = false
-	@State var equivalentOffset: Bool = false
+	var offsetChange: String? = nil
+	var posOffset: Bool = false
+	var equivalentOffset: Bool = false
 	var active: Bool { start != nil }
 	
 	init() {

@@ -256,7 +256,7 @@ class Ticker {
 	
 	func activityToggled() -> Ticker {
 		if let start {
-			return Ticker(name: name, start: nil, offset: Date().timeIntervalSince(start))
+			return Ticker(name: name, start: nil, offset: offset + Date().timeIntervalSince(start))
 		} else {
 			return Ticker(name: name, start: Date(), offset: offset)
 		}

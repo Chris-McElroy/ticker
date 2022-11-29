@@ -39,6 +39,11 @@ struct TickerView: View {
 		.frame(width: 500, height: 500)
 		.onReceive(NotificationCenter.default.publisher( for: NSApplication.didBecomeActiveNotification)) { _ in
 			isActive = true
+			if tickers.isEmpty {
+				setTickers([Ticker()])
+				selectedTicker = 0
+				Storage.set(selectedTicker, for: .selected)
+			}
 		}
 		.onReceive(NotificationCenter.default.publisher( for: NSApplication.didResignActiveNotification)) { _ in
 			isActive = false
@@ -89,9 +94,9 @@ struct TickerView: View {
 		let color: Color
 		
 		switch power {
-		case 80...100: color = Color(.displayP3, red: 0, green: 1, blue: 1)
+		case 80...100: color = Color(.displayP3, red: 0, green: 0.72, blue: 0.2)
 		case 50..<80: color = .white
-		case 20..<50: color = Color(.displayP3, red: 1.0, green: 0.75, blue: 0.0, opacity: 1.0)
+		case 20..<50: color =  Color(.displayP3, red: 0.88, green: 0.62, blue: 0.0, opacity: 1.0)
 		default: color = Color(.displayP3, red: 1, green: 0.0, blue: 0.0, opacity: 1.0)
 		}
 		
@@ -112,6 +117,8 @@ struct TickerView: View {
 				} else {
 					versionsBack = min(versionsBack + 1, tickerHistory.count - 1)
 				}
+			} else if event.characters == "q" {
+				NSApp.terminate(self)
 			}
 			return
 		}
@@ -119,7 +126,11 @@ struct TickerView: View {
 		guard let currentTicker else { return }
 		
 		if event.characters == " " {
-			setCurrentTicker(currentTicker.activityToggled())
+			if event.modifierFlags.contains(.shift) {
+				currentTicker.name += " "
+			} else {
+				setCurrentTicker(currentTicker.activityToggled())
+			}
 		} else if event.characters == "+" {
 			currentTicker.posOffset = true
 			currentTicker.equivalentOffset = false

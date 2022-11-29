@@ -24,34 +24,35 @@ var deleteTimer: () -> Void = {}
 
 // juicy shit https://stackoverflow.com/questions/64949572/how-to-create-status-bar-icon-menu-with-swiftui-like-in-macos-big-sur
 // how i got the quit button, could be useful for other items in the future https://sarunw.com/posts/how-to-make-macos-menu-bar-app/
-class StatusBarController {
-	static var main: StatusBarController = StatusBarController()
-	private var statusBar: NSStatusBar
-	private var statusItem: NSStatusItem
-	let hotKey = HotKey(key: .t, modifiers: [.command, .option])
-	
-	init() {
-		statusBar = NSStatusBar.init()
-		// Creating a status bar item having a fixed length
-		statusItem = statusBar.statusItem(withLength: NSStatusItem.variableLength)
-		
-		if let statusBarButton = statusItem.button {
-			statusBarButton.title = "  '  "
-		}
-		
-		// Add a menu and a menu item
-		let menu = NSMenu()
-		menu.addItem(NSMenuItem(title: "quit", action: #selector(NSApplication.terminate(_:)), keyEquivalent: ""))
-		statusItem.menu = menu
-		
-		hotKey.keyDownHandler = {
-			NSApplication.shared.activate(ignoringOtherApps: true)
-		}
-	}
-}
+//class StatusBarController {
+//	static var main: StatusBarController = StatusBarController()
+//	private var statusBar: NSStatusBar
+//	private var statusItem: NSStatusItem
+//	let hotKey = HotKey(key: .t, modifiers: [.command, .option])
+//
+//	init() {
+//		statusBar = NSStatusBar.init()
+//		// Creating a status bar item having a fixed length
+//		statusItem = statusBar.statusItem(withLength: NSStatusItem.variableLength)
+//
+//		if let statusBarButton = statusItem.button {
+//			statusBarButton.title = "  '  "
+//		}
+//
+//		// Add a menu and a menu item
+//		let menu = NSMenu()
+//		menu.addItem(NSMenuItem(title: "quit", action: #selector(NSApplication.terminate(_:)), keyEquivalent: ""))
+//		statusItem.menu = menu
+//
+//		hotKey.keyDownHandler = {
+//			NSApplication.shared.activate(ignoringOtherApps: true)
+//		}
+//	}
+//}
 
 class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
-	var statusBar: StatusBarController?
+//	var statusBar: StatusBarController?
+	let hotKey = HotKey(key: .t, modifiers: [.command, .option])
 	
 	func applicationDidFinishLaunching(_ notification: Notification) {
 		if let window = NSApplication.shared.windows.first {
@@ -71,8 +72,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 			window.delegate = self
 		}
 		
+		hotKey.keyDownHandler = {
+			NSApplication.shared.activate(ignoringOtherApps: true)
+		}
+		
 		//Initialising the status bar
-		statusBar = StatusBarController.main
+//		statusBar = StatusBarController.main
 		return
 	}
 	

@@ -43,6 +43,10 @@ struct TickerView: View {
 				setTickers([Ticker()])
 				selectedTicker = 0
 				Storage.set(selectedTicker, for: .selected)
+			} else {
+				for ticker in tickers {
+					ticker.flashing = false
+				}
 			}
 		}
 		.onReceive(NotificationCenter.default.publisher( for: NSApplication.didResignActiveNotification)) { _ in
@@ -94,7 +98,7 @@ struct TickerView: View {
 		let color: Color
 		
 		switch power {
-		case 80...100: color = Color(.displayP3, red: 0, green: 0.72, blue: 0.2)
+		case 80...100: color = Color(.displayP3, red: 0, green: 0.85, blue: 0.3)
 		case 50..<80: color = .white
 		case 20..<50: color =  Color(.displayP3, red: 0.88, green: 0.62, blue: 0.0, opacity: 1.0)
 		default: color = Color(.displayP3, red: 1, green: 0.0, blue: 0.0, opacity: 1.0)
@@ -105,6 +109,15 @@ struct TickerView: View {
 	
 	func keyDownFunc(event: NSEvent) {
 		updater.toggle()
+		
+		if event.keyCode == 53 { // esc
+			if currentTicker?.offsetChange != nil {
+				currentTicker?.resetOffset()
+			} else {
+				NSApplication.shared.hide(nil)
+				NSApplication.shared.unhideWithoutActivation()
+			}
+		}
 		
 		if event.modifierFlags.contains(.command) {
 			if event.characters == "e" {
@@ -204,6 +217,8 @@ class Ticker {
 	var posOffset: Bool = false
 	var equivalentOffset: Bool = false
 	var active: Bool { start != nil }
+	var flashing: Bool = false
+	var wasNegative: Bool = false
 	
 	init() {
 		name = ""
@@ -233,6 +248,10 @@ class Ticker {
 		if let start { total = Date().timeIntervalSince(start) + offset }
 		else { total = offset }
 		let hours = total/3600
+		if wasNegative && total >= 0 { flashing = true }
+		wasNegative = total < 0
+		if total < 0 { flashing = false }
+		if flashing && (total*2).truncatingRemainder(dividingBy: 2) < 1 { return " " }
 		
 		fullString += " " + String(format: "%.2f", hours)
 		
@@ -263,6 +282,12 @@ class Ticker {
 		}
 		
 		return Ticker(name: name, start: start, offset: offset + totalOffsetChange)
+	}
+	
+	func resetOffset() {
+		offsetChange = nil
+		posOffset = false
+		equivalentOffset = false
 	}
 	
 	func activityToggled() -> Ticker {

@@ -30,7 +30,7 @@ struct TickerView: View {
 							.bold(isActive && i == selectedTicker)
 							.opacity(tickers[i].active ? 1 : (isActive ? 0.3 : 0))
 					}
-					Text((isActive ? getDateString() + "-" : "") + getCurrentTime())
+					Text((isActive ? getDateString() : "") + getCurrentTime())
 					Spacer().frame(height: (updater ? 2 : 2))
 				}
 				.fixedSize()
@@ -76,11 +76,11 @@ struct TickerView: View {
     }
 	
 	func getDateString() -> String {
-		let dateComp = Calendar.current.dateComponents([.year, .month, .day], from: .now)
-		let yearAmt = (dateComp.year ?? 0) + 10000
-		let dayString = (dateComp.month ?? 0).toDozenal().dropFirst() + (dateComp.day ?? 0).toDozenal(minChar: 2)
+		let dateComp = Calendar.current.dateComponents([.year, .month, .day, .hour], from: .now)
+		let year = (dateComp.year ?? 0) - 1997
+		let hour = (dateComp.hour ?? 0)
 		
-		return yearAmt.toDozenal() + "-" + dayString
+		return "\(year).\(dateComp.month ?? 0).\(dateComp.day ?? 0)." + (hour == 0 ? "0." : "")
 	}
 	
 	func setTickers(_ newTickers: [Ticker]) {
@@ -213,9 +213,9 @@ struct TickerView: View {
 func getCurrentTime() -> String {
 	let comp = Calendar.current.dateComponents([.hour, .minute, .second], from: .now)
 	let hour = comp.hour ?? 0
-	let fraction = ((comp.minute ?? 0)*60 + (comp.second ?? 0))/36
+//	let fraction = ((comp.minute ?? 0)*60 + (comp.second ?? 0))/36
 //	return String(format: "%01d.%02d", hour, fraction)
-	return String(hour*100 + (comp.minute ?? 0))
+	return (hour != 0 ? "\(hour)." : "") + "\(comp.minute ?? 0)"
 }
 
 func getCurrentDTime() -> String {
@@ -259,18 +259,22 @@ class Ticker {
 	}
 	
 	var string: String {
-		var fullString = name
+		var fullString = name + " "
 		
 		let total: Double
 		if let start { total = Date().timeIntervalSince(start) + offset }
 		else { total = offset }
-		let hours = total/3600
 		if wasNegative && total >= 0 { flashing = true }
 		wasNegative = total < 0
-		if total < 0 { flashing = false }
+		if total < 0 {
+			flashing = false
+			fullString += "-"
+		}
 		if flashing && (total*2).truncatingRemainder(dividingBy: 2) < 1 { return " " }
 		
-		fullString += " " + String(format: "%.2f", hours)
+		let min = (Int(total.rounded(.towardZero))/60) % 60
+		let hours = Int(total.rounded(.towardZero))/3600
+		fullString += (hours != 0 ? "\(hours)." : "") + "\(min)"
 		
 		if let offsetChange {
 			if equivalentOffset {

@@ -14,7 +14,7 @@ struct TickerView: View {
 	@State var selectedTicker: Int = Storage.int(.selected)
 	@State var isActive: Bool = false
 	@State var updater: Bool = false
-	@State var remainingPower: Int = getRemainingPower()
+//	@State var remainingPower: Int = getRemainingPower()
 	
 	var tickers: [Ticker] { tickerHistory[tickerHistory.count - 1 - versionsBack] }
 	var currentTicker: Ticker? { tickers.isEmpty ? nil : tickers[selectedTicker] }
@@ -30,7 +30,7 @@ struct TickerView: View {
 							.bold(isActive && i == selectedTicker)
 							.opacity(tickers[i].active ? 1 : (isActive ? 0.3 : 0))
 					}
-					getTimeView()
+					Text((isActive ? getDateString() + "-" : "") + getCurrentTime())
 					Spacer().frame(height: (updater ? 2 : 2))
 				}
 				.fixedSize()
@@ -69,11 +69,19 @@ struct TickerView: View {
 			Timer.scheduledTimer(withTimeInterval: 0.2, repeats: true, block: { _ in
 				updater.toggle()
 			})
-			Timer.scheduledTimer(withTimeInterval: 100, repeats: true, block: { _ in
-				remainingPower = getRemainingPower()
-			})
+//			Timer.scheduledTimer(withTimeInterval: 100, repeats: true, block: { _ in
+//				remainingPower = getRemainingPower()
+//			})
 		}
     }
+	
+	func getDateString() -> String {
+		let dateComp = Calendar.current.dateComponents([.year, .month, .day], from: .now)
+		let yearAmt = (dateComp.year ?? 0) + 10000
+		let dayString = (dateComp.month ?? 0).toDozenal().dropFirst() + (dateComp.day ?? 0).toDozenal(minChar: 2)
+		
+		return yearAmt.toDozenal() + "-" + dayString
+	}
 	
 	func setTickers(_ newTickers: [Ticker]) {
 		if versionsBack != 0 {
@@ -92,20 +100,20 @@ struct TickerView: View {
 		setTickers(newTickers)
 	}
 	
-	func getTimeView() -> some View {
-		let time = getCurrentTime().split(separator: ".")
-		let power = remainingPower
-		let color: Color
-		
-		switch power {
-		case 80...100: color = Color(.displayP3, red: 0, green: 0.85, blue: 0.3)
-		case 50..<80: color = .white
-		case 20..<50: color =  Color(.displayP3, red: 0.88, green: 0.62, blue: 0.0, opacity: 1.0)
-		default: color = Color(.displayP3, red: 1, green: 0.0, blue: 0.0, opacity: 1.0)
-		}
-		
-		return Text(time[0]) + Text(".").foregroundColor(color) + Text(time[1])
-	}
+//	func getTimeView() -> some View {
+//		let time = getCurrentTime().split(separator: ".")
+//		let power = remainingPower
+//		let color: Color
+//
+//		switch power {
+//		case 80...100: color = Color(.displayP3, red: 0, green: 0.85, blue: 0.3)
+//		case 50..<80: color = .white
+//		case 20..<50: color =  Color(.displayP3, red: 0.88, green: 0.62, blue: 0.0, opacity: 1.0)
+//		default: color = Color(.displayP3, red: 1, green: 0.0, blue: 0.0, opacity: 1.0)
+//		}
+//
+//		return Text(time[0]) + Text(".").foregroundColor(color) + Text(time[1])
+//	}
 	
 	func keyDownFunc(event: NSEvent) {
 		updater.toggle()
@@ -206,7 +214,16 @@ func getCurrentTime() -> String {
 	let comp = Calendar.current.dateComponents([.hour, .minute, .second], from: .now)
 	let hour = comp.hour ?? 0
 	let fraction = ((comp.minute ?? 0)*60 + (comp.second ?? 0))/36
+//	return String(format: "%01d.%02d", hour, fraction)
+	return String(hour*100 + (comp.minute ?? 0))
+}
+
+func getCurrentDTime() -> String {
+	let comp = Calendar.current.dateComponents([.hour, .minute, .second], from: .now)
+	let hour = comp.hour ?? 0
+	let fraction = ((comp.minute ?? 0)*60 + (comp.second ?? 0))/36
 	return String(format: "%01d.%02d", hour, fraction)
+//	return String(hour*100 + (comp.minute ?? 0))
 }
 
 class Ticker {
@@ -257,7 +274,7 @@ class Ticker {
 		
 		if let offsetChange {
 			if equivalentOffset {
-				fullString += " " + (posOffset ? "+" : "-") + " " + getCurrentTime() + " " + (posOffset ? "-" : "+") + " " + offsetChange
+				fullString += " " + (posOffset ? "+" : "-") + " " + getCurrentDTime() + " " + (posOffset ? "-" : "+") + " " + offsetChange
 			} else {
 				fullString += " " + (posOffset ? "+" : "-") + " " + offsetChange
 			}
@@ -271,7 +288,7 @@ class Ticker {
 		
 		var newOffset = (Double(offsetChange) ?? 0)
 		if equivalentOffset {
-			newOffset = (Double(getCurrentTime()) ?? 0) - newOffset
+			newOffset = (Double(getCurrentDTime()) ?? 0) - newOffset
 		}
 		
 		let totalOffsetChange: Double

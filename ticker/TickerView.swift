@@ -76,11 +76,11 @@ struct TickerView: View {
     }
 	
 	func getDateString() -> String {
-		let dateComp = Calendar.current.dateComponents([.year, .month, .day, .hour], from: .now)
-		let year = (dateComp.year ?? 0) - 1997
+		let dateComp = Calendar.current.dateComponents([.day, .hour], from: .now)
+//		let year = (dateComp.year ?? 0) - 1997
 		let hour = (dateComp.hour ?? 0)
 		
-		return "\(year).\(dateComp.month ?? 0).\(dateComp.day ?? 0)." + (hour == 0 ? "0." : "")
+		return "\(dateComp.day ?? 0)." + (hour == 0 ? "0." : "")
 	}
 	
 	func setTickers(_ newTickers: [Ticker]) {
@@ -211,20 +211,20 @@ struct TickerView: View {
 }
 
 func getCurrentTime() -> String {
-	let comp = Calendar.current.dateComponents([.hour, .minute, .second], from: .now)
+	let comp = Calendar.current.dateComponents([.hour, .minute], from: .now)
 	let hour = comp.hour ?? 0
 //	let fraction = ((comp.minute ?? 0)*60 + (comp.second ?? 0))/36
 //	return String(format: "%01d.%02d", hour, fraction)
 	return (hour != 0 ? "\(hour)." : "") + "\(comp.minute ?? 0)"
 }
 
-func getCurrentDTime() -> String {
-	let comp = Calendar.current.dateComponents([.hour, .minute, .second], from: .now)
-	let hour = comp.hour ?? 0
-	let fraction = ((comp.minute ?? 0)*60 + (comp.second ?? 0))/36
-	return String(format: "%01d.%02d", hour, fraction)
-//	return String(hour*100 + (comp.minute ?? 0))
-}
+//func getCurrentDTime() -> String {
+//	let comp = Calendar.current.dateComponents([.hour, .minute, .second], from: .now)
+//	let hour = comp.hour ?? 0
+//	let fraction = ((comp.minute ?? 0)*60 + (comp.second ?? 0))/36
+//	return String(format: "%01d.%02d", hour, fraction)
+// //	return String(hour*100 + (comp.minute ?? 0))
+//}
 
 class Ticker {
 	var name: String
@@ -261,24 +261,25 @@ class Ticker {
 	var string: String {
 		var fullString = name + " "
 		
-		let total: Double
-		if let start { total = Date().timeIntervalSince(start) + offset }
-		else { total = offset }
-		if wasNegative && total >= 0 { flashing = true }
-		wasNegative = total < 0
-		if total < 0 {
+		let time: Double
+		if let start { time = Date().timeIntervalSince(start) + offset }
+		else { time = offset }
+		if wasNegative && time >= 0 { flashing = true }
+		wasNegative = time < 0
+		if time < 0 {
 			flashing = false
 			fullString += "-"
 		}
-		if flashing && (total*2).truncatingRemainder(dividingBy: 2) < 1 { return " " }
+		let posTime = abs(time)
+		if flashing && (posTime*2).truncatingRemainder(dividingBy: 2) < 1 { return " " }
 		
-		let min = (Int(total.rounded(.towardZero))/60) % 60
-		let hours = Int(total.rounded(.towardZero))/3600
+		let min = (Int(posTime.rounded(.down))/60) % 60
+		let hours = Int(posTime.rounded(.towardZero))/3600
 		fullString += (hours != 0 ? "\(hours)." : "") + "\(min)"
 		
 		if let offsetChange {
-			if equivalentOffset {
-				fullString += " " + (posOffset ? "+" : "-") + " " + getCurrentDTime() + " " + (posOffset ? "-" : "+") + " " + offsetChange
+				if equivalentOffset {
+				fullString += " " + (posOffset ? "+" : "-") + " " + getCurrentTime() + " " + (posOffset ? "-" : "+") + " " + offsetChange
 			} else {
 				fullString += " " + (posOffset ? "+" : "-") + " " + offsetChange
 			}
@@ -290,16 +291,26 @@ class Ticker {
 	func offsetResolved() -> Ticker {
 		guard let offsetChange else { return self }
 		
-		var newOffset = (Double(offsetChange) ?? 0)
+		let offsetComp = offsetChange.split(separator: ".")
+		
+		guard offsetComp.count == 1 || offsetComp.count == 2 else {
+			resetOffset()
+			return self
+		}
+		
+		var newOffset = (Int(offsetComp.last ?? "") ?? 0) + 60*((offsetComp.count == 2) ? (Int(offsetComp.first ?? "") ?? 0) : 0)
+		
 		if equivalentOffset {
-			newOffset = (Double(getCurrentDTime()) ?? 0) - newOffset
+			let comp = Calendar.current.dateComponents([.hour, .minute], from: .now)
+			
+			newOffset = 60*(comp.hour ?? 0) + (comp.minute ?? 0) - newOffset
 		}
 		
 		let totalOffsetChange: Double
 		if posOffset {
-			totalOffsetChange = newOffset*3600
+			totalOffsetChange = Double(newOffset)*60
 		} else {
-			totalOffsetChange = -newOffset*3600
+			totalOffsetChange = -Double(newOffset)*60
 		}
 		
 		return Ticker(name: name, start: start, offset: offset + totalOffsetChange)

@@ -23,6 +23,12 @@ struct KeyPressHelper: NSViewRepresentable {
 		override func keyDown(with event: NSEvent) {
 			keyDownFunc(event)
 		}
+		
+		override func flagsChanged(with event: NSEvent) {
+			if event.modifierFlags.contains(.option) {
+				showSeconds.toggle()
+			}
+		}
 	}
 
 	func makeNSView(context: Context) -> NSView {

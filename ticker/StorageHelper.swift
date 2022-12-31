@@ -16,6 +16,10 @@ class Storage {
 		UserDefaults.standard.integer(forKey: key.rawValue)
 	}
 	
+	static func bool(_ key: Key) -> Bool {
+		UserDefaults.standard.bool(forKey: key.rawValue)
+	}
+	
 	static func tickerArray() -> [[String: Any]] {
 		UserDefaults.standard.array(forKey: Key.tickers.rawValue) as? [[String: Any]] ?? []
 	}
@@ -35,4 +39,5 @@ enum Key: String {
 	case name = "name"
 	case start = "start"
 	case offset = "offset"
+	case showSeconds = "showSeconds"
 }

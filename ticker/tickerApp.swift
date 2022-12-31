@@ -52,7 +52,7 @@ var deleteTimer: () -> Void = {}
 
 class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 //	var statusBar: StatusBarController?
-	let hotKey = HotKey(key: .t, modifiers: [.command, .option])
+	let hotKey = HotKey(key: .three, modifiers: [.command, .option])
 	
 	func applicationDidFinishLaunching(_ notification: Notification) {
 		if let window = NSApplication.shared.windows.first {

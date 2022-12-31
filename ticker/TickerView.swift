@@ -8,6 +8,8 @@
 import SwiftUI
 import Combine
 
+var showSeconds: Bool = Storage.bool(.showSeconds)
+
 struct TickerView: View {
 	@State var tickerHistory: [[Ticker]] = [Storage.tickerArray().compactMap { Ticker(from: $0) }]
 	@State var versionsBack: Int = 0
@@ -211,11 +213,11 @@ struct TickerView: View {
 }
 
 func getCurrentTime() -> String {
-	let comp = Calendar.current.dateComponents([.hour, .minute], from: .now)
+	let comp = Calendar.current.dateComponents([.hour, .minute, .second], from: .now)
 	let hour = comp.hour ?? 0
 //	let fraction = ((comp.minute ?? 0)*60 + (comp.second ?? 0))/36
 //	return String(format: "%01d.%02d", hour, fraction)
-	return (hour != 0 ? "\(hour)." : "") + "\(comp.minute ?? 0)"
+	return (hour != 0 ? "\(hour)." : "") + "\(comp.minute ?? 0)" + (showSeconds ? ".\(comp.second ?? 0)" : "")
 }
 
 //func getCurrentDTime() -> String {
@@ -273,9 +275,10 @@ class Ticker {
 		let posTime = abs(time)
 		if flashing && (posTime*2).truncatingRemainder(dividingBy: 2) < 1 { return " " }
 		
+		let seconds = Int(posTime.rounded(.down)) % 60
 		let min = (Int(posTime.rounded(.down))/60) % 60
-		let hours = Int(posTime.rounded(.towardZero))/3600
-		fullString += (hours != 0 ? "\(hours)." : "") + "\(min)"
+		let hours = Int(posTime.rounded(.down))/3600
+		fullString += (hours != 0 ? "\(hours)." : "") + "\(min)" + (showSeconds ? ".\(seconds)" : "")
 		
 		if let offsetChange {
 				if equivalentOffset {
@@ -291,29 +294,43 @@ class Ticker {
 	func offsetResolved() -> Ticker {
 		guard let offsetChange else { return self }
 		
-		let offsetComp = offsetChange.split(separator: ".")
+		let offsetComp = offsetChange.split(separator: ".").map { Double($0) ?? 0 }
 		
-		guard offsetComp.count == 1 || offsetComp.count == 2 else {
+		let hours: Double
+		let min: Double
+		let seconds: Double
+		
+		if offsetComp.count == 1 && !showSeconds {
+			hours = 0
+			min = offsetComp[0]
+			seconds = 0
+		} else if offsetComp.count == 2 && !showSeconds {
+			hours = offsetComp[0]
+			min = offsetComp[1]
+			seconds = 0
+		} else if offsetComp.count == 2 && showSeconds {
+			hours = 0
+			min = offsetComp[0]
+			seconds = offsetComp[1]
+		} else if offsetComp.count == 3 && showSeconds {
+			hours = offsetComp[0]
+			min = offsetComp[1]
+			seconds = offsetComp[2]
+		} else {
 			resetOffset()
 			return self
 		}
 		
-		var newOffset = (Int(offsetComp.last ?? "") ?? 0) + 60*((offsetComp.count == 2) ? (Int(offsetComp.first ?? "") ?? 0) : 0)
+		var newOffset = hours*3600 + min*60 + seconds
 		
 		if equivalentOffset {
-			let comp = Calendar.current.dateComponents([.hour, .minute], from: .now)
+			let comp = Calendar.current.dateComponents([.hour, .minute, .second], from: .now)
+			let eqAmt: Int = 3600*(comp.hour ?? 0) + 60*(comp.minute ?? 0) + (comp.second ?? 0)
 			
-			newOffset = 60*(comp.hour ?? 0) + (comp.minute ?? 0) - newOffset
+			newOffset = Double(eqAmt) - newOffset
 		}
 		
-		let totalOffsetChange: Double
-		if posOffset {
-			totalOffsetChange = Double(newOffset)*60
-		} else {
-			totalOffsetChange = -Double(newOffset)*60
-		}
-		
-		return Ticker(name: name, start: start, offset: offset + totalOffsetChange)
+		return Ticker(name: name, start: start, offset: offset + (posOffset ? newOffset : -newOffset))
 	}
 	
 	func resetOffset() {

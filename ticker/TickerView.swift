@@ -140,10 +140,10 @@ struct TickerView: View {
 				} else {
 					versionsBack = min(versionsBack + 1, tickerHistory.count - 1)
 				}
-			} else if event.characters == "q" && event.modifierFlags.contains(.option) {
+			} else if event.characters == "œ" {
 				NSApp.terminate(self)
 			} else if event.characters == "c" {
-				guard let copyString = currentTicker?.getTimeString(colon: true) else { return }
+				guard let copyString = currentTicker?.getTimeString(copy: true) else { return }
 				NSPasteboard.general.declareTypes([.string], owner: nil)
 				NSPasteboard.general.setString(copyString, forType: .string)
 			}
@@ -279,8 +279,7 @@ class Ticker {
 		return fullString
 	}
 	
-	func getTimeString(colon: Bool = false) -> String {
-		var fullString = ""
+	func getTimeString(copy: Bool = false) -> String {
 		let time: Double
 		if let start { time = Date().timeIntervalSince(start) + offset }
 		else { time = offset }
@@ -290,7 +289,6 @@ class Ticker {
 		wasNegative = time < 0
 		if time < 0 {
 			flashing = false
-			fullString += "-"
 		}
 		if flashing && (posTime*2).truncatingRemainder(dividingBy: 2) < 1 { return " " }
 		
@@ -298,11 +296,11 @@ class Ticker {
 		let min = (Int(posTime.rounded(.down))/60) % 60
 		let hours = Int(posTime.rounded(.down))/3600
 		
-		if colon {
-			return (hours != 0 ? "\(hours):" : "") + "\(min)" + (showSeconds ? ":\(seconds)" : "")
+		if copy {
+			return (time < 0 ? "-" : "") + "\(hours):" + String(format: "%02d", min) + (showSeconds ? ":\(String(format: "%02d", seconds))" : "")
 		}
 		
-		return (hours != 0 ? "\(hours)." : "") + "\(min)" + (showSeconds ? ".\(seconds)" : "")
+		return (time < 0 ? "-" : "") + (hours != 0 ? "\(hours)." : "") + "\(min)" + (showSeconds ? ".\(seconds)" : "")
 	}
 	
 	func offsetResolved() -> Ticker {

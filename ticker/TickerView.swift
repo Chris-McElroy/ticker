@@ -28,7 +28,7 @@ struct TickerView: View {
 				Spacer()
 				VStack(alignment: .trailing, spacing: 0) {
 					ForEach(0..<Int(tickers.count), id: \.self) { i in
-						Text(tickers[i].string)
+						Text(tickers[i].getString())
 							.bold(isActive && i == selectedTicker)
 							.opacity(tickers[i].active ? 1 : (isActive ? 0.3 : 0))
 					}
@@ -140,8 +140,12 @@ struct TickerView: View {
 				} else {
 					versionsBack = min(versionsBack + 1, tickerHistory.count - 1)
 				}
-			} else if event.characters == "q" {
+			} else if event.characters == "q" && event.modifierFlags.contains(.option) {
 				NSApp.terminate(self)
+			} else if event.characters == "c" {
+				guard let copyString = currentTicker?.getTimeString(colon: true) else { return }
+				NSPasteboard.general.declareTypes([.string], owner: nil)
+				NSPasteboard.general.setString(copyString, forType: .string)
 			}
 			return
 		}
@@ -260,25 +264,9 @@ class Ticker {
 		self.offset = offset
 	}
 	
-	var string: String {
+	func getString() -> String {
 		var fullString = name + " "
-		
-		let time: Double
-		if let start { time = Date().timeIntervalSince(start) + offset }
-		else { time = offset }
-		if wasNegative && time >= 0 { flashing = true }
-		wasNegative = time < 0
-		if time < 0 {
-			flashing = false
-			fullString += "-"
-		}
-		let posTime = abs(time)
-		if flashing && (posTime*2).truncatingRemainder(dividingBy: 2) < 1 { return " " }
-		
-		let seconds = Int(posTime.rounded(.down)) % 60
-		let min = (Int(posTime.rounded(.down))/60) % 60
-		let hours = Int(posTime.rounded(.down))/3600
-		fullString += (hours != 0 ? "\(hours)." : "") + "\(min)" + (showSeconds ? ".\(seconds)" : "")
+		fullString += getTimeString()
 		
 		if let offsetChange {
 				if equivalentOffset {
@@ -289,6 +277,32 @@ class Ticker {
 		}
 		
 		return fullString
+	}
+	
+	func getTimeString(colon: Bool = false) -> String {
+		var fullString = ""
+		let time: Double
+		if let start { time = Date().timeIntervalSince(start) + offset }
+		else { time = offset }
+		let posTime = abs(time)
+		
+		if wasNegative && time >= 0 { flashing = true }
+		wasNegative = time < 0
+		if time < 0 {
+			flashing = false
+			fullString += "-"
+		}
+		if flashing && (posTime*2).truncatingRemainder(dividingBy: 2) < 1 { return " " }
+		
+		let seconds = Int(posTime.rounded(.down)) % 60
+		let min = (Int(posTime.rounded(.down))/60) % 60
+		let hours = Int(posTime.rounded(.down))/3600
+		
+		if colon {
+			return (hours != 0 ? "\(hours):" : "") + "\(min)" + (showSeconds ? ":\(seconds)" : "")
+		}
+		
+		return (hours != 0 ? "\(hours)." : "") + "\(min)" + (showSeconds ? ".\(seconds)" : "")
 	}
 	
 	func offsetResolved() -> Ticker {

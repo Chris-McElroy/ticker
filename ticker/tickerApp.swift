@@ -52,33 +52,67 @@ var deleteTimer: () -> Void = {}
 
 class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 //	var statusBar: StatusBarController?
-	let hotKey = HotKey(key: .three, modifiers: [.command, .option])
+	let activationKey = HotKey(key: .three, modifiers: [.command, .option])
+	let clickableKey = HotKey(key: .three, modifiers: [.command, .shift])
 	
 	func applicationDidFinishLaunching(_ notification: Notification) {
 		if let window = NSApplication.shared.windows.first {
-			window.titleVisibility = .hidden
-			window.titlebarAppearsTransparent = true
-			window.standardWindowButton(NSWindow.ButtonType.closeButton)!.isHidden = true
-			window.standardWindowButton(NSWindow.ButtonType.miniaturizeButton)!.isHidden = true
-			window.standardWindowButton(NSWindow.ButtonType.zoomButton)!.isHidden = true
-			window.isOpaque = false
-			window.hasShadow = false
-			window.level = .floating
-			window.backgroundColor = NSColor.clear
-			window.isReleasedWhenClosed = false
-			window.isMovableByWindowBackground = true
-			window.collectionBehavior = .canJoinAllSpaces
-			window.titlebarSeparatorStyle = .none
-			window.delegate = self
+			setupWindow(window)
 		}
 		
-		hotKey.keyDownHandler = {
+		activationKey.keyDownHandler = {
 			NSApplication.shared.activate(ignoringOtherApps: true)
 		}
+		
+		clickableKey.keyDownHandler = {
+			guard let window = NSApplication.shared.windows.first else { return }
+			if !window.ignoresMouseEvents {
+				window.ignoresMouseEvents = true
+				return
+			}
+			let url = URL(fileURLWithPath: Bundle.main.resourcePath!)
+			let path = url.deletingLastPathComponent().deletingLastPathComponent().absoluteString
+			let task = Process()
+			task.launchPath = "/usr/bin/open"
+			task.arguments = [path]
+			task.launch()
+			exit(0)
+		}
+		
+			// code to make a new window, did not work very well
+//			var rect = NSRect(x: 0, y: 0, width: 500, height: 500)
+//			for window in NSApplication.shared.windows where window.isOnActiveSpace {
+//				rect = window.frame
+//				window.close()
+//			}
+//			var window = NSWindow( contentRect: rect, styleMask: [], backing: .buffered, defer: false)
+//			self.setupWindow(window)
+//			reattachKeyPress()
+//			let view = TickerView()
+//
+//			window.contentView = NSHostingView(rootView: view)
+//			window.makeKeyAndOrderFront(nil)
 		
 		//Initialising the status bar
 //		statusBar = StatusBarController.main
 		return
+	}
+	
+	func setupWindow(_ window: NSWindow) {
+		window.titleVisibility = .hidden
+		window.titlebarAppearsTransparent = true
+		window.standardWindowButton(NSWindow.ButtonType.closeButton)?.isHidden = true
+		window.standardWindowButton(NSWindow.ButtonType.miniaturizeButton)?.isHidden = true
+		window.standardWindowButton(NSWindow.ButtonType.zoomButton)?.isHidden = true
+		window.isOpaque = false
+		window.hasShadow = false
+		window.level = .floating
+		window.backgroundColor = NSColor.clear
+		window.isReleasedWhenClosed = false
+		window.isMovableByWindowBackground = true
+		window.collectionBehavior = .canJoinAllSpaces
+		window.titlebarSeparatorStyle = .none
+		window.delegate = self
 	}
 	
 //	// https://stackoverflow.com/questions/70091919/how-set-position-of-window-on-the-desktop-in-swiftui
@@ -96,7 +130,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 //		let windowY = visibleFrame.midY - contentHeight/2
 //
 //		let newFramePreference = "\(Int(windowX)) \(Int(windowY)) \(Int(contentWidth)) \(Int(contentHeight)) 0 0 \(Int(screenWidth)) \(Int(screenHeightWithoutMenuBar))"
-//		print("new frame:", newFramePreference)
 //		UserDefaults.standard.set("1450 0 44 126 0 0 1512 950 ", forKey: "NSWindow Frame cornerPos")
 //	}
 	

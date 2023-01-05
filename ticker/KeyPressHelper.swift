@@ -7,6 +7,8 @@
 
 import SwiftUI
 
+var reattachKeyPress: () -> Void = {}
+
 // based off https://stackoverflow.com/a/61155272/8222178
 struct KeyPressHelper: NSViewRepresentable {
 	let view: KeyView = KeyView()
@@ -35,9 +37,16 @@ struct KeyPressHelper: NSViewRepresentable {
 		DispatchQueue.main.async { // wait till next event cycle
 			view.window?.makeFirstResponder(view)
 		}
+		reattachKeyPress = reattachKeyPressHelper
 		return view
 	}
 
 	func updateNSView(_ nsView: NSView, context: Context) {
+	}
+	
+	func reattachKeyPressHelper() {
+		DispatchQueue.main.async { // wait till next event cycle
+			view.window?.makeFirstResponder(view)
+		}
 	}
 }

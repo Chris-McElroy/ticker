@@ -41,15 +41,14 @@ struct TickerView: View {
 		.frame(width: 500, height: 500)
 		.onReceive(NotificationCenter.default.publisher( for: NSApplication.didBecomeActiveNotification)) { _ in
 			isActive = true
-			if tickers.isEmpty {
-				setTickers([Ticker()])
-				selectedTicker = 0
-				Storage.set(selectedTicker, for: .selected)
-			} else {
-				for ticker in tickers {
-					ticker.flashing = false
-				}
+			for ticker in tickers {
+				ticker.flashing = false
 			}
+//			if tickers.isEmpty {
+//				setTickers([Ticker()])
+//				selectedTicker = 0
+//				Storage.set(selectedTicker, for: .selected)
+//			}
 		}
 		.onReceive(NotificationCenter.default.publisher( for: NSApplication.didResignActiveNotification)) { _ in
 			isActive = false
@@ -218,7 +217,7 @@ struct TickerView: View {
 
 func getCurrentTime() -> String {
 	let comp = Calendar.current.dateComponents([.hour, .minute, .second], from: .now)
-	let hour = comp.hour ?? 0
+	let hour = (comp.hour ?? 0) // TODO find a better way to do this
 //	let fraction = ((comp.minute ?? 0)*60 + (comp.second ?? 0))/36
 //	return String(format: "%01d.%02d", hour, fraction)
 	return (hour != 0 ? "\(hour)." : "") + "\(comp.minute ?? 0)" + (showSeconds ? ".\(comp.second ?? 0)" : "")
@@ -337,7 +336,7 @@ class Ticker {
 		
 		if equivalentOffset {
 			let comp = Calendar.current.dateComponents([.hour, .minute, .second], from: .now)
-			let eqAmt: Int = 3600*(comp.hour ?? 0) + 60*(comp.minute ?? 0) + (comp.second ?? 0)
+			let eqAmt: Int = 3600*((comp.hour ?? 0)) + 60*(comp.minute ?? 0) + (comp.second ?? 0)
 			
 			newOffset = Double(eqAmt) - newOffset
 		}

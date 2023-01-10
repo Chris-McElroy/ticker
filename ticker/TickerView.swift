@@ -157,12 +157,16 @@ struct TickerView: View {
 			} else {
 				setCurrentTicker(currentTicker.activityToggled())
 			}
-		} else if event.characters == "+" {
-			currentTicker.posOffset = true
+		} else if event.characters == "+" && currentTicker.offsetChange == nil {
+			currentTicker.offsetType = .pos
 			currentTicker.equivalentOffset = false
 			currentTicker.offsetChange = ""
-		} else if event.characters == "-" {
-			currentTicker.posOffset = false
+		} else if event.characters == "-" && currentTicker.offsetChange == nil {
+			currentTicker.offsetType = .neg
+			currentTicker.equivalentOffset = false
+			currentTicker.offsetChange = ""
+		} else if event.characters == ">" && currentTicker.offsetChange == nil {
+			currentTicker.offsetType = .zero
 			currentTicker.equivalentOffset = false
 			currentTicker.offsetChange = ""
 		} else if event.characters == "=" {
@@ -191,7 +195,7 @@ struct TickerView: View {
 			setCurrentTicker(currentTicker.offsetResolved())
 		} else if event.specialKey == nil {
 			if currentTicker.offsetChange != nil {
-				for c in (event.characters ?? "").filter({ "0123456789.".contains($0) }) {
+				for c in (event.characters ?? "").filter({ "0123456789.-".contains($0) }) {
 					currentTicker.offsetChange?.append(c)
 				}
 			} else {
@@ -231,138 +235,3 @@ func getCurrentTime() -> String {
 // //	return String(hour*100 + (comp.minute ?? 0))
 //}
 
-class Ticker {
-	var name: String
-	let start: Date?
-	let offset: Double
-	var offsetChange: String? = nil
-	var posOffset: Bool = false
-	var equivalentOffset: Bool = false
-	var active: Bool { start != nil }
-	var flashing: Bool = false
-	var wasNegative: Bool = false
-	
-	init() {
-		name = ""
-		start = Date.now
-		offset = 0
-	}
-	
-	init(name: String, start: Date?, offset: Double) {
-		self.name = name
-		self.start = start
-		self.offset = offset
-	}
-	
-	init?(from dict: [String: Any]) {
-		guard let startTime = dict[Key.start.rawValue] as? Double else { return nil }
-		guard let name = dict[Key.name.rawValue] as? String else { return nil }
-		guard let offset = dict[Key.offset.rawValue] as? Double else { return nil }
-		start = startTime == 0 ? nil : Date(timeIntervalSinceReferenceDate: startTime)
-		self.name = name
-		self.offset = offset
-	}
-	
-	func getString() -> String {
-		var fullString = name + " "
-		fullString += getTimeString()
-		
-		if let offsetChange {
-				if equivalentOffset {
-				fullString += " " + (posOffset ? "+" : "-") + " " + getCurrentTime() + " " + (posOffset ? "-" : "+") + " " + offsetChange
-			} else {
-				fullString += " " + (posOffset ? "+" : "-") + " " + offsetChange
-			}
-		}
-		
-		return fullString
-	}
-	
-	func getTimeString(copy: Bool = false) -> String {
-		let time: Double
-		if let start { time = Date().timeIntervalSince(start) + offset }
-		else { time = offset }
-		let posTime = abs(time)
-		
-		if wasNegative && time >= 0 { flashing = true }
-		wasNegative = time < 0
-		if time < 0 {
-			flashing = false
-		}
-		if flashing && (posTime*2).truncatingRemainder(dividingBy: 2) < 1 { return " " }
-		
-		let seconds = Int(posTime.rounded(.down)) % 60
-		let min = (Int(posTime.rounded(.down))/60) % 60
-		let hours = Int(posTime.rounded(.down))/3600
-		
-		if copy {
-			return (time < 0 ? "-" : "") + "\(hours):" + String(format: "%02d", min) + (showSeconds ? ":\(String(format: "%02d", seconds))" : "")
-		}
-		
-		return (time < 0 ? "-" : "") + (hours != 0 ? "\(hours)." : "") + "\(min)" + (showSeconds ? ".\(seconds)" : "")
-	}
-	
-	func offsetResolved() -> Ticker {
-		guard let offsetChange else { return self }
-		
-		let offsetComp = offsetChange.split(separator: ".").map { Double($0) ?? 0 }
-		
-		let hours: Double
-		let min: Double
-		let seconds: Double
-		
-		if offsetComp.count == 1 && !showSeconds {
-			hours = 0
-			min = offsetComp[0]
-			seconds = 0
-		} else if offsetComp.count == 2 && !showSeconds {
-			hours = offsetComp[0]
-			min = offsetComp[1]
-			seconds = 0
-		} else if offsetComp.count == 2 && showSeconds {
-			hours = 0
-			min = offsetComp[0]
-			seconds = offsetComp[1]
-		} else if offsetComp.count == 3 && showSeconds {
-			hours = offsetComp[0]
-			min = offsetComp[1]
-			seconds = offsetComp[2]
-		} else {
-			resetOffset()
-			return self
-		}
-		
-		var newOffset = hours*3600 + min*60 + seconds
-		
-		if equivalentOffset {
-			let comp = Calendar.current.dateComponents([.hour, .minute, .second], from: .now)
-			let eqAmt: Int = 3600*((comp.hour ?? 0)) + 60*(comp.minute ?? 0) + (comp.second ?? 0)
-			
-			newOffset = Double(eqAmt) - newOffset
-		}
-		
-		return Ticker(name: name, start: start, offset: offset + (posOffset ? newOffset : -newOffset))
-	}
-	
-	func resetOffset() {
-		offsetChange = nil
-		posOffset = false
-		equivalentOffset = false
-	}
-	
-	func activityToggled() -> Ticker {
-		if let start {
-			return Ticker(name: name, start: nil, offset: offset + Date().timeIntervalSince(start))
-		} else {
-			return Ticker(name: name, start: Date(), offset: offset)
-		}
-	}
-	
-	func toDict() -> [String: Any] {
-		[
-			Key.start.rawValue: start?.timeIntervalSinceReferenceDate ?? 0,
-			Key.name.rawValue: name,
-			Key.offset.rawValue: offset
-		]
-	}
-}

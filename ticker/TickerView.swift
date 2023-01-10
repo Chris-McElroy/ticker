@@ -157,15 +157,15 @@ struct TickerView: View {
 			} else {
 				setCurrentTicker(currentTicker.activityToggled())
 			}
-		} else if event.characters == "+" && currentTicker.offsetChange == nil {
+		} else if event.characters == "+" {
 			currentTicker.offsetType = .pos
 			currentTicker.equivalentOffset = false
 			currentTicker.offsetChange = ""
-		} else if event.characters == "-" && currentTicker.offsetChange == nil {
+		} else if event.characters == "-" && currentTicker.offsetChange != "" {
 			currentTicker.offsetType = .neg
 			currentTicker.equivalentOffset = false
 			currentTicker.offsetChange = ""
-		} else if event.characters == ">" && currentTicker.offsetChange == nil {
+		} else if event.characters == "<" {
 			currentTicker.offsetType = .zero
 			currentTicker.equivalentOffset = false
 			currentTicker.offsetChange = ""

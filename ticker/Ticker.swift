@@ -10,7 +10,7 @@ import Foundation
 enum OffsetType: String {
 	case pos = "+"
 	case neg = "-"
-	case zero = ">"
+	case zero = "<"
 	
 	func eqString() -> String {
 		self == .pos ? "-" : "+"

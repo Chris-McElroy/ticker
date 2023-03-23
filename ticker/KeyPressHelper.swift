@@ -29,6 +29,8 @@ struct KeyPressHelper: NSViewRepresentable {
 		override func flagsChanged(with event: NSEvent) {
 			if event.modifierFlags.contains(.control) {
 				showSeconds.toggle()
+			} else if event.modifierFlags.contains(.option) {
+				showDays.toggle()
 			}
 		}
 	}

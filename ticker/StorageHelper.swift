@@ -40,4 +40,5 @@ enum Key: String {
 	case start = "start"
 	case offset = "offset"
 	case showSeconds = "showSeconds"
+	case showDays = "showDays"
 }

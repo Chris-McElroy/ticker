@@ -9,6 +9,7 @@ import SwiftUI
 import Combine
 
 var showSeconds: Bool = Storage.bool(.showSeconds)
+var showDays: Bool = Storage.bool(.showDays)
 
 struct TickerView: View {
 	@State var tickerHistory: [[Ticker]] = [Storage.tickerArray().compactMap { Ticker(from: $0) }]
@@ -32,13 +33,13 @@ struct TickerView: View {
 							.bold(isActive && i == selectedTicker)
 							.opacity(tickers[i].active ? 1 : (isActive ? 0.3 : 0))
 					}
-					Text(getCurrentTime(withDay: isActive))
+					Text(getCurrentTime(withDay: showDays || isActive))
 					Spacer().frame(height: (updater ? 2 : 2))
 				}
 				.fixedSize()
 			}
 		}
-		.foregroundColor(Color(hue: 0, saturation: 0, brightness: 0.25))
+//		.foregroundColor(Color(hue: 0, saturation: 0, brightness: 0.25)) // for vera's gray
 		.frame(width: 500, height: 500)
 		.onReceive(NotificationCenter.default.publisher( for: NSApplication.didBecomeActiveNotification)) { _ in
 			isActive = true

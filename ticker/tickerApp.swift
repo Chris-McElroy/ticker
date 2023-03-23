@@ -52,8 +52,7 @@ var deleteTimer: () -> Void = {}
 
 class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 //	var statusBar: StatusBarController?
-	let activationKey = HotKey(key: .three, modifiers: [.command, .option])
-	let clickableKey = HotKey(key: .three, modifiers: [.command, .shift])
+	let activationKey = HotKey(key: .three, modifiers: [.command])
 	// vera's keys:
 //	let activationKey = HotKey(key: .three, modifiers: [.command, .option])
 //	let clickableKey = HotKey(key: .three, modifiers: [.command, .shift])
@@ -67,20 +66,20 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 			NSApplication.shared.activate(ignoringOtherApps: true)
 		}
 		
-		clickableKey.keyDownHandler = {
-			guard let window = NSApplication.shared.windows.first else { return }
-			if !window.ignoresMouseEvents {
-				window.ignoresMouseEvents = true
-				return
-			}
-			let url = URL(fileURLWithPath: Bundle.main.resourcePath!)
-			let path = url.deletingLastPathComponent().deletingLastPathComponent().absoluteString
-			let task = Process()
-			task.launchPath = "/usr/bin/open"
-			task.arguments = [path]
-			task.launch()
-			exit(0)
-		}
+//		clickableKey.keyDownHandler = {
+//			guard let window = NSApplication.shared.windows.first else { return }
+//			if !window.ignoresMouseEvents {
+//				window.ignoresMouseEvents = true
+//				return
+//			}
+//			let url = URL(fileURLWithPath: Bundle.main.resourcePath!)
+//			let path = url.deletingLastPathComponent().deletingLastPathComponent().absoluteString
+//			let task = Process()
+//			task.launchPath = "/usr/bin/open"
+//			task.arguments = [path]
+//			task.launch()
+//			exit(0)
+//		}
 		
 			// code to make a new window, did not work very well
 //			var rect = NSRect(x: 0, y: 0, width: 500, height: 500)
@@ -115,7 +114,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 		window.isMovableByWindowBackground = true
 		window.collectionBehavior = .canJoinAllSpaces
 		window.titlebarSeparatorStyle = .none
-//		window.ignoresMouseEvents = true // comment this out for clickability
+		window.ignoresMouseEvents = true // comment this out for clickability
 		window.delegate = self
 	}
 	

@@ -28,3 +28,15 @@ extension Int {
 		return output
 	}
 }
+
+func tickerString(neg: Bool, days: Int = 0, hours: Int = 0, minutes: Int = 0, seconds: Int = 0) -> String {
+	if days != 0 {
+		return (neg ? "-" : "") + "\(days)." + "\(hours)." + "\(minutes)" + (showSeconds ? ".\(seconds)" : "")
+	} else if hours != 0 {
+		return (neg ? "-" : "") + "\(hours)." + "\(minutes)" + (showSeconds ? ".\(seconds)" : "")
+	} else if minutes != 0 || !showSeconds {
+		return (neg ? "-" : "") + "\(minutes)" + (showSeconds ? ".\(seconds)" : "")
+	} else {
+		return (neg ? "-" : "") + "\(seconds)"
+	}
+}

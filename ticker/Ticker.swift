@@ -13,7 +13,7 @@ enum OffsetType: String {
 	case zero = "<"
 	
 	func eqString() -> String {
-		self == .pos ? "-" : "+"
+		self == .pos ? "+" : "-"
 	}
 }
 
@@ -79,13 +79,14 @@ class Ticker {
 		
 		let seconds = Int(posTime.rounded(.down)) % 60
 		let min = (Int(posTime.rounded(.down))/60) % 60
-		let hours = Int(posTime.rounded(.down))/3600
+		let hours = Int(posTime.rounded(.down))/3600 % 24
+		let days = Int(posTime.rounded(.down))/86400
 		
 		if copy {
 			return (time < 0 ? "-" : "") + "\(hours):" + String(format: "%02d", min) + (showSeconds ? ":\(String(format: "%02d", seconds))" : "")
 		}
 		
-		return (time < 0 ? "-" : "") + (hours != 0 ? "\(hours)." : "") + "\(min)" + (showSeconds ? ".\(seconds)" : "")
+		return tickerString(neg: time < 0, days: days, hours: hours, minutes: min, seconds: seconds)
 	}
 	
 	func offsetResolved() -> Ticker {

@@ -32,12 +32,13 @@ struct TickerView: View {
 							.bold(isActive && i == selectedTicker)
 							.opacity(tickers[i].active ? 1 : (isActive ? 0.3 : 0))
 					}
-					Text((isActive ? getDateString() : "") + getCurrentTime())
+					Text(getCurrentTime(withDay: isActive))
 					Spacer().frame(height: (updater ? 2 : 2))
 				}
 				.fixedSize()
 			}
 		}
+		.foregroundColor(Color(hue: 0, saturation: 0, brightness: 0.25))
 		.frame(width: 500, height: 500)
 		.onReceive(NotificationCenter.default.publisher( for: NSApplication.didBecomeActiveNotification)) { _ in
 			isActive = true
@@ -75,14 +76,6 @@ struct TickerView: View {
 //			})
 		}
     }
-	
-	func getDateString() -> String {
-		let dateComp = Calendar.current.dateComponents([.day, .hour], from: .now)
-//		let year = (dateComp.year ?? 0) - 1997
-		let hour = (dateComp.hour ?? 0)
-		
-		return "\(dateComp.day ?? 0)." + (hour == 0 ? "0." : "")
-	}
 	
 	func setTickers(_ newTickers: [Ticker]) {
 		if versionsBack != 0 {
@@ -185,7 +178,9 @@ struct TickerView: View {
 			Storage.set(selectedTicker, for: .selected)
 		} else if event.specialKey == .delete {
 			if currentTicker.offsetChange != nil {
-				if !(currentTicker.offsetChange?.isEmpty ?? true) {
+				if currentTicker.offsetChange == "" {
+					currentTicker.offsetChange = nil
+				} else {
 					currentTicker.offsetChange?.removeLast()
 				}
 			} else if !currentTicker.name.isEmpty {
@@ -219,12 +214,14 @@ struct TickerView: View {
 	}
 }
 
-func getCurrentTime() -> String {
-	let comp = Calendar.current.dateComponents([.hour, .minute, .second], from: .now)
-	let hour = (comp.hour ?? 0) // TODO find a better way to do this
-//	let fraction = ((comp.minute ?? 0)*60 + (comp.second ?? 0))/36
-//	return String(format: "%01d.%02d", hour, fraction)
-	return (hour != 0 ? "\(hour)." : "") + "\(comp.minute ?? 0)" + (showSeconds ? ".\(comp.second ?? 0)" : "")
+func getCurrentTime(withDay: Bool = false) -> String {
+	let comp = Calendar.current.dateComponents([.day, .hour, .minute, .second], from: .now)
+	let hours = ((comp.hour ?? 0) + 11) % 12 + 1 // comp.hour ?? 0
+	return tickerString(neg: false, days: withDay ? comp.day ?? 0 : 0, hours: hours, minutes: comp.minute ?? 0, seconds: comp.second ?? 0)
+	
+	// from base 10
+	// let fraction = ((comp.minute ?? 0)*60 + (comp.second ?? 0))/36
+	// return String(format: "%01d.%02d", hour, fraction)
 }
 
 //func getCurrentDTime() -> String {

@@ -217,7 +217,7 @@ struct TickerView: View {
 
 func getCurrentTime(withDay: Bool = false) -> String {
 	let comp = Calendar.current.dateComponents([.day, .hour, .minute, .second], from: .now)
-	let hours = ((comp.hour ?? 0) + 11) % 12 + 1 // comp.hour ?? 0
+	let hours = comp.hour ?? 0 // ((comp.hour ?? 0) + 11) % 12 + 1
 	return tickerString(neg: false, days: withDay ? comp.day ?? 0 : 0, hours: hours, minutes: comp.minute ?? 0, seconds: comp.second ?? 0)
 	
 	// from base 10

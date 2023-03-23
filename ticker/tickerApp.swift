@@ -55,7 +55,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 	let activationKey = HotKey(key: .three, modifiers: [.command])
 	// vera's keys:
 //	let activationKey = HotKey(key: .z, modifiers: [.command, .option])
-//	let clickableKey = HotKey(key: .x, modifiers: [.command, .shift])
+//	let clickableKey = HotKey(key: .x, modifiers: [.command, .option])
 	
 	func applicationDidFinishLaunching(_ notification: Notification) {
 		if let window = NSApplication.shared.windows.first {
@@ -115,7 +115,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 		window.isMovableByWindowBackground = true
 		window.collectionBehavior = .canJoinAllSpaces
 		window.titlebarSeparatorStyle = .none
-//		window.ignoresMouseEvents = true // comment this out for clickability (vera's)
+		window.ignoresMouseEvents = true // comment this out for clickability (vera's)
 		window.delegate = self
 	}
 	

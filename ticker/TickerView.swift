@@ -139,6 +139,12 @@ struct TickerView: View {
 				guard let copyString = currentTicker?.getTimeString(copy: true) else { return }
 				NSPasteboard.general.declareTypes([.string], owner: nil)
 				NSPasteboard.general.setString(copyString, forType: .string)
+			} else if event.characters == "s" {
+				showSeconds.toggle()
+				Storage.set(showSeconds, for: .showSeconds)
+			} else if event.characters == "d" {
+				showDays.toggle()
+				Storage.set(showDays, for: .showDays)
 			}
 			return
 		}

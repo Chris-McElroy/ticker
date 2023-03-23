@@ -25,16 +25,6 @@ struct KeyPressHelper: NSViewRepresentable {
 		override func keyDown(with event: NSEvent) {
 			keyDownFunc(event)
 		}
-		
-		override func flagsChanged(with event: NSEvent) {
-			if event.modifierFlags.contains(.control) {
-				showSeconds.toggle()
-				Storage.set(showSeconds, for: .showSeconds)
-			} else if event.modifierFlags.contains(.option) { // option for chris, capsLock for vera
-				showDays.toggle()
-				Storage.set(showDays, for: .showDays)
-			}
-		}
 	}
 
 	func makeNSView(context: Context) -> NSView {

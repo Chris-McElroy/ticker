@@ -52,10 +52,10 @@ var deleteTimer: () -> Void = {}
 
 class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 //	var statusBar: StatusBarController?
-//	let activationKey = HotKey(key: .three, modifiers: [.command])
+	let activationKey = HotKey(key: .three, modifiers: [.command])
 	// vera's keys:
-	let activationKey = HotKey(key: .z, modifiers: [.command, .option])
-	let clickableKey = HotKey(key: .x, modifiers: [.command, .shift])
+//	let activationKey = HotKey(key: .z, modifiers: [.command, .option])
+//	let clickableKey = HotKey(key: .x, modifiers: [.command, .shift])
 	
 	func applicationDidFinishLaunching(_ notification: Notification) {
 		if let window = NSApplication.shared.windows.first {
@@ -67,20 +67,20 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 		}
 		
 		// vera's
-		clickableKey.keyDownHandler = {
-			guard let window = NSApplication.shared.windows.first else { return }
-			if !window.ignoresMouseEvents {
-				window.ignoresMouseEvents = true
-				return
-			}
-			let url = URL(fileURLWithPath: Bundle.main.resourcePath!)
-			let path = url.deletingLastPathComponent().deletingLastPathComponent().absoluteString
-			let task = Process()
-			task.launchPath = "/usr/bin/open"
-			task.arguments = [path]
-			task.launch()
-			exit(0)
-		}
+//		clickableKey.keyDownHandler = {
+//			guard let window = NSApplication.shared.windows.first else { return }
+//			if !window.ignoresMouseEvents {
+//				window.ignoresMouseEvents = true
+//				return
+//			}
+//			let url = URL(fileURLWithPath: Bundle.main.resourcePath!)
+//			let path = url.deletingLastPathComponent().deletingLastPathComponent().absoluteString
+//			let task = Process()
+//			task.launchPath = "/usr/bin/open"
+//			task.arguments = [path]
+//			task.launch()
+//			exit(0)
+//		}
 		
 			// code to make a new window, did not work very well
 //			var rect = NSRect(x: 0, y: 0, width: 500, height: 500)

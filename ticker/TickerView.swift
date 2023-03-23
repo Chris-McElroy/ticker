@@ -33,13 +33,13 @@ struct TickerView: View {
 							.bold(isActive && i == selectedTicker)
 							.opacity(tickers[i].active ? 1 : (isActive ? 0.3 : 0))
 					}
-					Text(getCurrentTime(withDay: showDays || isActive))
+					Text(getCurrentTime(withDay: showDays != isActive))
 					Spacer().frame(height: (updater ? 2 : 2))
 				}
 				.fixedSize()
 			}
 		}
-		.foregroundColor(Color(hue: 0, saturation: 0, brightness: 0.5)) // for vera's gray
+//		.foregroundColor(Color(hue: 0, saturation: 0, brightness: 0.5)) // for vera's gray
 		.frame(width: 500, height: 500)
 		.onReceive(NotificationCenter.default.publisher( for: NSApplication.didBecomeActiveNotification)) { _ in
 			isActive = true
@@ -217,8 +217,8 @@ struct TickerView: View {
 
 func getCurrentTime(withDay: Bool = false) -> String {
 	let comp = Calendar.current.dateComponents([.day, .hour, .minute, .second], from: .now)
-//	let hours = comp.hour ?? 0
-	let hours = ((comp.hour ?? 0) + 11) % 12 + 1 // vera's
+	let hours = comp.hour ?? 0
+//	let hours = ((comp.hour ?? 0) + 11) % 12 + 1 // vera's
 	return tickerString(neg: false, days: withDay ? comp.day ?? 0 : 0, hours: hours, minutes: comp.minute ?? 0, seconds: comp.second ?? 0)
 	
 	// from base 10

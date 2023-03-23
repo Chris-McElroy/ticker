@@ -30,7 +30,7 @@ struct KeyPressHelper: NSViewRepresentable {
 			if event.modifierFlags.contains(.control) {
 				showSeconds.toggle()
 				Storage.set(showSeconds, for: .showSeconds)
-			} else if event.modifierFlags.contains(.option) {
+			} else if event.modifierFlags.contains(.capsLock) { // option for chris, capsLock for vera
 				showDays.toggle()
 				Storage.set(showDays, for: .showDays)
 			}

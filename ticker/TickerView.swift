@@ -33,7 +33,17 @@ struct TickerView: View {
 							.bold(isActive && i == selectedTicker)
 							.opacity(tickers[i].active ? 1 : (isActive ? 0.3 : 0))
 					}
-					Text(getCurrentTime(withDay: showDays != isActive))
+					let time = getCurrentTime(withDay: showDays || isActive)
+					if !showDays && isActive {
+						HStack(spacing: 0) {
+							Text(time.day).opacity(0.3)
+							Text(time.time.trimmingPrefix(time.day))
+						}
+						.bold(true)
+					} else {
+						Text(time.time)
+							.bold(isActive)
+					}
 					Spacer().frame(height: (updater ? 2 : 2))
 				}
 				.fixedSize()
@@ -142,7 +152,7 @@ struct TickerView: View {
 			} else if event.characters == "s" {
 				showSeconds.toggle()
 				Storage.set(showSeconds, for: .showSeconds)
-			} else if event.characters == "d" {
+			} else if event.characters == "f" { // make this d for vera
 				showDays.toggle()
 				Storage.set(showDays, for: .showDays)
 			}
@@ -221,11 +231,11 @@ struct TickerView: View {
 	}
 }
 
-func getCurrentTime(withDay: Bool = false) -> String {
+func getCurrentTime(withDay: Bool = false) -> (day: String, time: String) {
 	let comp = Calendar.current.dateComponents([.day, .hour, .minute, .second], from: .now)
 	let hours = comp.hour ?? 0
 //	let hours = ((comp.hour ?? 0) + 11) % 12 + 1 // vera's
-	return tickerString(neg: false, days: withDay ? comp.day ?? 0 : 0, hours: hours, minutes: comp.minute ?? 0, seconds: comp.second ?? 0)
+	return (withDay ? String(comp.day ?? 0) + "." : "", tickerString(neg: false, days: withDay ? comp.day ?? 0 : 0, hours: hours, minutes: comp.minute ?? 0, seconds: comp.second ?? 0))
 	
 	// from base 10
 	// let fraction = ((comp.minute ?? 0)*60 + (comp.second ?? 0))/36

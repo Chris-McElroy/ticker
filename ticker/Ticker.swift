@@ -55,7 +55,7 @@ class Ticker {
 		
 		if let offsetChange {
 			if equivalentOffset {
-				fullString += " " + offsetType.rawValue + " " + getCurrentTime() + " " + offsetType.eqString() + " " + offsetChange
+				fullString += " " + offsetType.rawValue + " " + getCurrentTime().time + " " + offsetType.eqString() + " " + offsetChange
 			} else {
 				fullString += " " + offsetType.rawValue + " " + offsetChange
 			}

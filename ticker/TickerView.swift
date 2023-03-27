@@ -81,6 +81,7 @@ struct TickerView: View {
 			deleteTimer = deleteTimerFunc
 			Timer.scheduledTimer(withTimeInterval: 0.2, repeats: true, block: { _ in
 				updater.toggle()
+				updateHideWindow()
 			})
 //			Timer.scheduledTimer(withTimeInterval: 100, repeats: true, block: { _ in
 //				remainingPower = getRemainingPower()
@@ -103,6 +104,22 @@ struct TickerView: View {
 		var newTickers = tickers
 		newTickers[selectedTicker] = newValue
 		setTickers(newTickers)
+	}
+	
+	func updateHideWindow() {
+		var shouldHide = false
+		for ticker in tickers {
+			if ticker.flashing && !ticker.name.contains("/") {
+				shouldHide = true
+				break
+			}
+		}
+		if shouldHide {
+			NSApplication.shared.activate(ignoringOtherApps: true)
+			hideWindow.makeKeyAndOrderFront(nil)
+		} else {
+			hideWindow.close()
+		}
 	}
 	
 //	func getTimeView() -> some View {

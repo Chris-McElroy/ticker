@@ -7,6 +7,8 @@
 
 import SwiftUI
 
+let sleepQueue = DispatchQueue(label: "sleep")
+
 enum OffsetType: String {
 	case pos = "+"
 	case neg = "-"
@@ -78,11 +80,7 @@ class Ticker {
 		if time < 0 {
 			flashing = false
 		}
-		if flashing && (posTime).truncatingRemainder(dividingBy: 2) < 1 {
-			if !name.contains("/") {
-				NSApplication.shared.activate(ignoringOtherApps: true)
-				NSApplication.shared.hideOtherApplications(nil)
-			}
+		if flashing && (posTime*2).truncatingRemainder(dividingBy: 2) < 1 {
 			return " "
 		}
 		

@@ -50,6 +50,8 @@ var deleteTimer: () -> Void = {}
 //	}
 //}
 
+let hideWindow = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 2000, height: 2000), styleMask: [], backing: .buffered, defer: false)
+
 class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 //	var statusBar: StatusBarController?
 	let activationKey = HotKey(key: .three, modifiers: [.command])
@@ -61,6 +63,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 		if let window = NSApplication.shared.windows.first {
 			setupWindow(window)
 		}
+		
+		hideWindow.isReleasedWhenClosed = false
+		hideWindow.backgroundColor = NSColor.black
 		
 		activationKey.keyDownHandler = {
 			NSApplication.shared.activate(ignoringOtherApps: true)

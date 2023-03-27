@@ -5,7 +5,7 @@
 //  Created by Chris McElroy on 1/9/23.
 //
 
-import Foundation
+import SwiftUI
 
 enum OffsetType: String {
 	case pos = "+"
@@ -70,12 +70,21 @@ class Ticker {
 		else { time = offset }
 		let posTime = abs(time)
 		
-		if wasNegative && time >= 0 { flashing = true }
+		if wasNegative && time >= 0 {
+			flashing = true
+		}
+		
 		wasNegative = time < 0
 		if time < 0 {
 			flashing = false
 		}
-		if flashing && (posTime*2).truncatingRemainder(dividingBy: 2) < 1 { return " " }
+		if flashing && (posTime).truncatingRemainder(dividingBy: 2) < 1 {
+			if !name.contains("/") {
+				NSApplication.shared.activate(ignoringOtherApps: true)
+				NSApplication.shared.hideOtherApplications(nil)
+			}
+			return " "
+		}
 		
 		let seconds = Int(posTime.rounded(.down)) % 60
 		let min = (Int(posTime.rounded(.down))/60) % 60

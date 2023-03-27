@@ -53,9 +53,9 @@ struct TickerView: View {
 		.frame(width: 500, height: 500)
 		.onReceive(NotificationCenter.default.publisher( for: NSApplication.didBecomeActiveNotification)) { _ in
 			isActive = true
-			for ticker in tickers {
-				ticker.flashing = false
-			}
+//			for ticker in tickers {
+//				ticker.flashing = false
+//			}
 //			if tickers.isEmpty {
 //				setTickers([Ticker()])
 //				selectedTicker = 0

@@ -21,6 +21,7 @@ enum OffsetType: String {
 
 class Ticker {
 	var name: String
+	let origin: Date
 	let start: Date?
 	let offset: Double
 	var offsetChange: String? = nil
@@ -32,12 +33,14 @@ class Ticker {
 	
 	init() {
 		name = ""
-		start = .now
+		origin = .now
+		start = origin
 		offset = 0
 	}
 	
-	init(name: String, start: Date?, offset: Double) {
+	init(name: String, origin: Date, start: Date?, offset: Double) {
 		self.name = name
+		self.origin = origin
 		self.start = start
 		self.offset = offset
 	}
@@ -45,9 +48,11 @@ class Ticker {
 	init?(from dict: [String: Any]) {
 		guard let startTime = dict[Key.start.rawValue] as? Double else { return nil }
 		guard let name = dict[Key.name.rawValue] as? String else { return nil }
+		guard let originTime = dict[Key.origin.rawValue] as? Double else { return nil }
 		guard let offset = dict[Key.offset.rawValue] as? Double else { return nil }
-		start = startTime == 0 ? nil : Date(timeIntervalSinceReferenceDate: startTime)
 		self.name = name
+		origin = Date(timeIntervalSinceReferenceDate: originTime)
+		start = startTime == 0 ? nil : Date(timeIntervalSinceReferenceDate: startTime)
 		self.offset = offset
 	}
 	
@@ -68,20 +73,23 @@ class Ticker {
 	
 	func getTimeString(copy: Bool = false) -> String {
 		let time: Double
-		if let start { time = Date().timeIntervalSince(start) + offset }
+		if showTotals { time = Date().timeIntervalSince(origin) }
+		else if let start { time = Date().timeIntervalSince(start) + offset }
 		else { time = offset }
 		let posTime = abs(time)
 		
-		if wasNegative && time >= 0 {
-			flashing = true
-		}
-		
-		wasNegative = time < 0
-		if time < 0 {
-			flashing = false
-		}
-		if flashing && (posTime*2).truncatingRemainder(dividingBy: 2) < 1 {
-			return " "
+		if !showTotals {
+			if wasNegative && time >= 0 {
+				flashing = true
+			}
+			
+			wasNegative = time < 0
+			if time < 0 {
+				flashing = false
+			}
+			if flashing && (posTime*2).truncatingRemainder(dividingBy: 2) < 1 {
+				return " "
+			}
 		}
 		
 		let seconds = Int(posTime.rounded(.down)) % 60
@@ -130,7 +138,7 @@ class Ticker {
 			newOffset = eqAmt - newOffset
 		}
 		
-		return Ticker(name: name, start: (offsetType == .zero ? now : start), offset: (offsetType == .zero ? 0 : offset) + (offsetType == .neg ? -newOffset : newOffset))
+		return Ticker(name: name, origin: origin, start: (offsetType == .zero ? now : start), offset: (offsetType == .zero ? 0 : offset) + (offsetType == .neg ? -newOffset : newOffset))
 	}
 	
 	func resetOffset() {
@@ -141,9 +149,9 @@ class Ticker {
 	
 	func activityToggled() -> Ticker {
 		if let start {
-			return Ticker(name: name, start: nil, offset: offset + Date().timeIntervalSince(start))
+			return Ticker(name: name, origin: origin, start: nil, offset: offset + Date().timeIntervalSince(start))
 		} else {
-			return Ticker(name: name, start: Date(), offset: offset)
+			return Ticker(name: name, origin: origin, start: Date(), offset: offset)
 		}
 	}
 	
@@ -151,6 +159,7 @@ class Ticker {
 		[
 			Key.start.rawValue: start?.timeIntervalSinceReferenceDate ?? 0,
 			Key.name.rawValue: name,
+			Key.origin.rawValue: origin.timeIntervalSinceReferenceDate,
 			Key.offset.rawValue: offset
 		]
 	}

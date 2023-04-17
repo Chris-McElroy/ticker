@@ -59,6 +59,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 //	let activationKey = HotKey(key: .z, modifiers: [.command, .option])
 //	let clickableKey = HotKey(key: .x, modifiers: [.command, .option])
 	
+	
 	func applicationDidFinishLaunching(_ notification: Notification) {
 		if let window = NSApplication.shared.windows.first {
 			setupWindow(window)

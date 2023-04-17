@@ -37,6 +37,7 @@ enum Key: String {
 	case tickers = "tickers"
 	case selected = "selected"
 	case name = "name"
+	case origin = "origin"
 	case start = "start"
 	case offset = "offset"
 	case showSeconds = "showSeconds"

@@ -7,9 +7,14 @@
 
 import SwiftUI
 import Combine
+import MediaPlayer
 
 var showSeconds: Bool = Storage.bool(.showSeconds)
 var showDays: Bool = Storage.bool(.showDays)
+var showTotals: Bool = false
+
+// Load framework
+let bundle = CFBundleCreate(kCFAllocatorDefault, NSURL(fileURLWithPath: "/System/Library/PrivateFrameworks/MediaRemote.framework"))
 
 struct TickerView: View {
 	@State var tickerHistory: [[Ticker]] = [Storage.tickerArray().compactMap { Ticker(from: $0) }]
@@ -107,6 +112,7 @@ struct TickerView: View {
 	}
 	
 	func updateHideWindow() {
+		
 		var shouldHide = false
 		for ticker in tickers {
 			if ticker.flashing && !ticker.name.contains("/") {
@@ -147,6 +153,10 @@ struct TickerView: View {
 				NSApplication.shared.hide(nil)
 				NSApplication.shared.unhideWithoutActivation()
 			}
+		}
+		
+		if event.modifierFlags.contains(.option) {
+			showTotals = true
 		}
 		
 		if event.modifierFlags.contains(.command) {

@@ -228,7 +228,11 @@ struct TickerView: View {
 					currentTicker.offsetChange?.removeLast()
 				}
 			} else if !currentTicker.name.isEmpty {
-				currentTicker.name.removeLast()
+				if event.modifierFlags.contains(.option) {
+					currentTicker.name = ""
+				} else {
+					currentTicker.name.removeLast()
+				}
 			}
 		} else if event.specialKey == .carriageReturn {
 			setCurrentTicker(currentTicker.offsetResolved())

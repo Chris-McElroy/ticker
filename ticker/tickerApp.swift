@@ -20,8 +20,6 @@ struct tickerApp: App {
     }
 }
 
-var deleteTimer: () -> Void = {}
-
 // juicy shit https://stackoverflow.com/questions/64949572/how-to-create-status-bar-icon-menu-with-swiftui-like-in-macos-big-sur
 // how i got the quit button, could be useful for other items in the future https://sarunw.com/posts/how-to-make-macos-menu-bar-app/
 //class StatusBarController {
@@ -144,7 +142,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 //	}
 	
 	func windowShouldClose(_ sender: NSWindow) -> Bool {
-		deleteTimer()
+		NSApplication.shared.hide(nil)
+		NSApplication.shared.unhideWithoutActivation()
 		return false
 	}
 }

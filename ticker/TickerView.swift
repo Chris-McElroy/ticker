@@ -35,7 +35,7 @@ struct TickerView: View {
 				VStack(alignment: .trailing, spacing: 0) {
 					ForEach(0..<Int(tickers.count), id: \.self) { i in
 						Text(tickers[i].getString())
-							.bold(isActive && i == selectedTicker)
+							.underline(isActive && i == selectedTicker)
 							.opacity(tickers[i].active ? 1 : (isActive ? 0.3 : 0))
 					}
 					let time = getCurrentTime(withDay: showDays || isActive)
@@ -47,7 +47,7 @@ struct TickerView: View {
 						.bold(true)
 					} else {
 						Text(time.time)
-							.bold(isActive)
+							.italic(isActive)
 					}
 					Spacer().frame(height: (updater ? 2 : 2))
 				}
@@ -83,7 +83,6 @@ struct TickerView: View {
 		}
 		.background(KeyPressHelper(keyDownFunc))
 		.onAppear {
-			deleteTimer = deleteTimerFunc
 			Timer.scheduledTimer(withTimeInterval: 0.2, repeats: true, block: { _ in
 				updater.toggle()
 				updateHideWindow()
@@ -112,10 +111,12 @@ struct TickerView: View {
 	}
 	
 	func updateHideWindow() {
-		
 		var shouldHide = false
-		for ticker in tickers {
+		for (i, ticker) in tickers.enumerated() {
 			if ticker.flashing && !ticker.name.contains("/") {
+				if !isActive {
+					selectedTicker = i
+				}
 				shouldHide = true
 				break
 			}
@@ -155,12 +156,12 @@ struct TickerView: View {
 			}
 		}
 		
-		if event.modifierFlags.contains(.option) {
-			showTotals = true
-		}
-		
 		if event.modifierFlags.contains(.command) {
-			if event.characters == "e" {
+			if event.characters == "d" { // vera may want to change this back to space, along with other changes
+				if let currentTicker {
+					setCurrentTicker(currentTicker.activityToggled())
+				}
+			} else if event.characters == "e" {
 				setTickers([Ticker()] + tickers)
 				selectedTicker = 0
 				Storage.set(selectedTicker, for: .selected)
@@ -182,6 +183,14 @@ struct TickerView: View {
 			} else if event.characters == "f" { // make this d for vera
 				showDays.toggle()
 				Storage.set(showDays, for: .showDays)
+			} else if event.specialKey == .delete {
+				if tickers.count > selectedTicker {
+					var newTickers = tickers
+					newTickers.remove(at: selectedTicker)
+					selectedTicker %= max(1, newTickers.count)
+					setTickers(newTickers)
+					Storage.set(selectedTicker, for: .selected)
+				}
 			}
 			return
 		}
@@ -189,10 +198,8 @@ struct TickerView: View {
 		guard let currentTicker else { return }
 		
 		if event.characters == " " {
-			if event.modifierFlags.contains(.shift) {
+			if currentTicker.offsetChange == nil {
 				currentTicker.name += " "
-			} else {
-				setCurrentTicker(currentTicker.activityToggled())
 			}
 		} else if event.characters == "+" {
 			currentTicker.offsetType = .pos
@@ -244,16 +251,6 @@ struct TickerView: View {
 			} else {
 				currentTicker.name += event.characters ?? ""
 			}
-		}
-	}
-	
-	func deleteTimerFunc() {
-		if tickers.count > selectedTicker {
-			var newTickers = tickers
-			newTickers.remove(at: selectedTicker)
-			selectedTicker %= max(1, newTickers.count)
-			setTickers(newTickers)
-			Storage.set(selectedTicker, for: .selected)
 		}
 	}
 	

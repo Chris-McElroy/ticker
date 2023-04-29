@@ -54,6 +54,7 @@ struct TickerView: View {
 				.fixedSize()
 			}
 		}
+		.foregroundColor(.white)
 //		.foregroundColor(Color(hue: 0, saturation: 0, brightness: 0.5)) // for vera's gray
 		.frame(width: 500, height: 500)
 		.onReceive(NotificationCenter.default.publisher( for: NSApplication.didBecomeActiveNotification)) { _ in
@@ -157,7 +158,7 @@ struct TickerView: View {
 		}
 		
 		if event.modifierFlags.contains(.command) {
-			if event.characters == "d" { // vera may want to change this back to space, along with other changes
+			if event.characters == "s" { // vera may want to change this back to space, along with other changes
 				if let currentTicker {
 					setCurrentTicker(currentTicker.activityToggled())
 				}
@@ -177,13 +178,13 @@ struct TickerView: View {
 				guard let copyString = currentTicker?.getTimeString(copy: true) else { return }
 				NSPasteboard.general.declareTypes([.string], owner: nil)
 				NSPasteboard.general.setString(copyString, forType: .string)
-			} else if event.characters == "s" {
+			} else if event.characters == "a" {
 				showSeconds.toggle()
 				Storage.set(showSeconds, for: .showSeconds)
 			} else if event.characters == "f" { // make this d for vera
 				showDays.toggle()
 				Storage.set(showDays, for: .showDays)
-			} else if event.specialKey == .delete {
+			} else if event.characters == "d" {
 				if tickers.count > selectedTicker {
 					var newTickers = tickers
 					newTickers.remove(at: selectedTicker)

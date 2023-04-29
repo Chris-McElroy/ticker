@@ -52,7 +52,7 @@ let hideWindow = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 2000, height: 2
 
 class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 //	var statusBar: StatusBarController?
-	let activationKey = HotKey(key: .three, modifiers: [.command])
+	let activationKey = HotKey(key: .a, modifiers: [.option])
 	// vera's keys:
 //	let activationKey = HotKey(key: .z, modifiers: [.command, .option])
 //	let clickableKey = HotKey(key: .x, modifiers: [.command, .option])

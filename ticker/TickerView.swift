@@ -112,22 +112,21 @@ struct TickerView: View {
 	}
 	
 	func updateHideWindow() {
-		var shouldHide = false
 		for (i, ticker) in tickers.enumerated() {
 			if ticker.flashing && !ticker.name.contains("/") {
-				if !isActive {
+				if !isActive || !hideWindow.isVisible {
 					selectedTicker = i
+					let executableURL = URL(fileURLWithPath: "/usr/bin/shortcuts")
+					try! Process.run(executableURL, arguments: ["run", "pause"], terminationHandler: nil)
+					NSApplication.shared.activate(ignoringOtherApps: true)
+					
+					hideWindow.makeKeyAndOrderFront(nil)
 				}
-				shouldHide = true
-				break
+				return
 			}
 		}
-		if shouldHide {
-			NSApplication.shared.activate(ignoringOtherApps: true)
-			hideWindow.makeKeyAndOrderFront(nil)
-		} else {
-			hideWindow.close()
-		}
+		
+		hideWindow.close()
 	}
 	
 //	func getTimeView() -> some View {

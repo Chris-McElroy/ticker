@@ -22,6 +22,7 @@ struct TickerView: View {
 	@State var selectedTicker: Int = Storage.int(.selected)
 	@State var isActive: Bool = false
 	@State var updater: Bool = false
+	@State var wasFlashing: Bool = false
 //	@State var remainingPower: Int = getRemainingPower()
 	
 	var tickers: [Ticker] { tickerHistory[tickerHistory.count - 1 - versionsBack] }
@@ -114,18 +115,25 @@ struct TickerView: View {
 	func updateHideWindow() {
 		for (i, ticker) in tickers.enumerated() {
 			if ticker.flashing && !ticker.name.contains("/") {
-				if !isActive || !hideWindow.isVisible {
+				if !wasFlashing {
 					selectedTicker = i
 					let executableURL = URL(fileURLWithPath: "/usr/bin/shortcuts")
 					try! Process.run(executableURL, arguments: ["run", "pause"], terminationHandler: nil)
-					NSApplication.shared.activate(ignoringOtherApps: true)
-					
-					hideWindow.makeKeyAndOrderFront(nil)
 				}
+				if !isActive  {
+					NSApplication.shared.activate(ignoringOtherApps: true)
+					hideWindow.orderFront(nil)
+				}
+				if !hideWindow.isVisible {
+					hideWindow.setIsVisible(true)
+				}
+				
+				wasFlashing = true
 				return
 			}
 		}
 		
+		wasFlashing = false
 		hideWindow.close()
 	}
 	

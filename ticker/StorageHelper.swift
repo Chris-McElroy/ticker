@@ -38,6 +38,7 @@ enum Key: String {
 	case selected = "selected"
 	case name = "name"
 	case origin = "origin"
+	case visible = "visible"
 	case start = "start"
 	case offset = "offset"
 	case showSeconds = "showSeconds"

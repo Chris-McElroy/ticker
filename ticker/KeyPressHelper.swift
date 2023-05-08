@@ -25,10 +25,6 @@ struct KeyPressHelper: NSViewRepresentable {
 		override func keyDown(with event: NSEvent) {
 			keyDownFunc(event)
 		}
-		
-		override func flagsChanged(with event: NSEvent) {
-			showTotals = event.modifierFlags.contains(.option)
-		}
 	}
 
 	func makeNSView(context: Context) -> NSView {

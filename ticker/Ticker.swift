@@ -24,6 +24,7 @@ class Ticker {
 	let origin: Date
 	let start: Date?
 	let offset: Double
+	let visible: Bool
 	var offsetChange: String? = nil
 	var offsetType: OffsetType = .pos
 	var equivalentOffset: Bool = false
@@ -36,13 +37,15 @@ class Ticker {
 		origin = .now
 		start = origin
 		offset = 0
+		visible = true
 	}
 	
-	init(name: String, origin: Date, start: Date?, offset: Double) {
+	init(name: String, origin: Date, start: Date?, offset: Double, visible: Bool) {
 		self.name = name
 		self.origin = origin
 		self.start = start
 		self.offset = offset
+		self.visible = visible
 	}
 	
 	init?(from dict: [String: Any]) {
@@ -50,10 +53,12 @@ class Ticker {
 		guard let name = dict[Key.name.rawValue] as? String else { return nil }
 		guard let originTime = dict[Key.origin.rawValue] as? Double else { return nil }
 		guard let offset = dict[Key.offset.rawValue] as? Double else { return nil }
+		guard let visible = dict[Key.visible.rawValue] as? Bool else { return nil }
 		self.name = name
 		origin = Date(timeIntervalSinceReferenceDate: originTime)
 		start = startTime == 0 ? nil : Date(timeIntervalSinceReferenceDate: startTime)
 		self.offset = offset
+		self.visible = visible
 	}
 	
 	func getString() -> String {
@@ -138,7 +143,7 @@ class Ticker {
 			newOffset = eqAmt - newOffset
 		}
 		
-		return Ticker(name: name, origin: origin, start: (offsetType == .zero ? now : start), offset: (offsetType == .zero ? 0 : offset) + (offsetType == .neg ? -newOffset : newOffset))
+		return Ticker(name: name, origin: origin, start: (offsetType == .zero ? now : start), offset: (offsetType == .zero ? 0 : offset) + (offsetType == .neg ? -newOffset : newOffset), visible: visible)
 	}
 	
 	func resetOffset() {
@@ -149,10 +154,14 @@ class Ticker {
 	
 	func activityToggled() -> Ticker {
 		if let start {
-			return Ticker(name: name, origin: origin, start: nil, offset: offset + Date().timeIntervalSince(start))
+			return Ticker(name: name, origin: origin, start: nil, offset: offset + Date().timeIntervalSince(start), visible: visible)
 		} else {
-			return Ticker(name: name, origin: origin, start: Date(), offset: offset)
+			return Ticker(name: name, origin: origin, start: Date(), offset: offset, visible: visible)
 		}
+	}
+	
+	func visibilityToggled() -> Ticker {
+		Ticker(name: name, origin: origin, start: start, offset: offset, visible: !visible)
 	}
 	
 	func toDict() -> [String: Any] {
@@ -160,7 +169,8 @@ class Ticker {
 			Key.start.rawValue: start?.timeIntervalSinceReferenceDate ?? 0,
 			Key.name.rawValue: name,
 			Key.origin.rawValue: origin.timeIntervalSinceReferenceDate,
-			Key.offset.rawValue: offset
+			Key.offset.rawValue: offset,
+			Key.visible.rawValue: visible
 		]
 	}
 }

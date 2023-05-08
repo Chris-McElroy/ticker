@@ -37,7 +37,8 @@ struct TickerView: View {
 					ForEach(0..<Int(tickers.count), id: \.self) { i in
 						Text(tickers[i].getString())
 							.underline(isActive && i == selectedTicker)
-							.opacity(tickers[i].active ? 1 : (isActive ? 0.3 : 0))
+							.italic(!tickers[i].active)
+							.opacity(tickers[i].visible ? 1 : (isActive ? 0.3 : 0))
 					}
 					let time = getCurrentTime(withDay: showDays || isActive)
 					if !showDays && isActive {
@@ -71,15 +72,15 @@ struct TickerView: View {
 		}
 		.onReceive(NotificationCenter.default.publisher( for: NSApplication.didResignActiveNotification)) { _ in
 			isActive = false
-			let topActive = tickers.firstIndex(where: { $0.active }) ?? tickers.count
-			let bottomInactive = tickers.lastIndex(where: { !$0.active }) ?? 0
-			guard tickers.contains(where: { $0.offsetChange != nil }) || topActive < bottomInactive else { return }
+			let topVisible = tickers.firstIndex(where: { $0.visible }) ?? tickers.count
+			let bottomInvisible = tickers.lastIndex(where: { !$0.visible }) ?? 0
+			guard tickers.contains(where: { $0.offsetChange != nil }) || topVisible < bottomInvisible else { return }
 			let lastCurrentTicker = currentTicker
 			var newTickers = tickers
 			for (i, ticker) in newTickers.enumerated() {
 				newTickers[i] = ticker.offsetResolved()
 			}
-			setTickers(newTickers.filter({ !$0.active }) + newTickers.filter({ $0.active }))
+			setTickers(newTickers.filter({ !$0.visible }) + newTickers.filter({ $0.visible }))
 			selectedTicker = tickers.firstIndex(where: { $0 === lastCurrentTicker }) ?? selectedTicker
 			Storage.set(selectedTicker, for: .selected)
 		}
@@ -165,7 +166,7 @@ struct TickerView: View {
 		}
 		
 		if event.modifierFlags.contains(.command) {
-			if event.characters == "s" { // vera may want to change this back to space, along with other changes
+			if event.characters == "f" { // vera may want to change this back to space, along with other changes
 				if let currentTicker {
 					setCurrentTicker(currentTicker.activityToggled())
 				}
@@ -173,6 +174,10 @@ struct TickerView: View {
 				setTickers([Ticker()] + tickers)
 				selectedTicker = 0
 				Storage.set(selectedTicker, for: .selected)
+			} else if event.characters == "d" {
+				if let currentTicker {
+					setCurrentTicker(currentTicker.visibilityToggled())
+				}
 			} else if event.characters == "z" {
 				if event.modifierFlags.contains(.shift) {
 					versionsBack = max(versionsBack - 1, 0)
@@ -186,12 +191,14 @@ struct TickerView: View {
 				NSPasteboard.general.declareTypes([.string], owner: nil)
 				NSPasteboard.general.setString(copyString, forType: .string)
 			} else if event.characters == "a" {
+				showTotals.toggle()
+				//			} else if event.characters == "f" { // make this d for vera
+				//				showDays.toggle()
+				//				Storage.set(showDays, for: .showDays)
+			} else if event.characters == "s" {
 				showSeconds.toggle()
 				Storage.set(showSeconds, for: .showSeconds)
-			} else if event.characters == "f" { // make this d for vera
-				showDays.toggle()
-				Storage.set(showDays, for: .showDays)
-			} else if event.characters == "d" {
+			} else if event.characters == "∂" {
 				if tickers.count > selectedTicker {
 					var newTickers = tickers
 					newTickers.remove(at: selectedTicker)

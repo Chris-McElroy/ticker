@@ -24,11 +24,11 @@ class Ticker {
 	let origin: Date
 	let start: Date?
 	let offset: Double
-	let visible: Bool
 	var offsetChange: String? = nil
 	var offsetType: OffsetType = .pos
 	var equivalentOffset: Bool = false
 	var active: Bool { start != nil }
+	var visible: Bool = true
 	var flashing: Bool = false
 	var wasNegative: Bool = false
 	
@@ -37,7 +37,6 @@ class Ticker {
 		origin = .now
 		start = origin
 		offset = 0
-		visible = true
 	}
 	
 	init(name: String, origin: Date, start: Date?, offset: Double, visible: Bool) {
@@ -154,14 +153,10 @@ class Ticker {
 	
 	func activityToggled() -> Ticker {
 		if let start {
-			return Ticker(name: name, origin: origin, start: nil, offset: offset + Date().timeIntervalSince(start), visible: visible)
+			return Ticker(name: name, origin: origin, start: nil, offset: offset + Date().timeIntervalSince(start), visible: false)
 		} else {
-			return Ticker(name: name, origin: origin, start: Date(), offset: offset, visible: visible)
+			return Ticker(name: name, origin: origin, start: Date(), offset: offset, visible: true)
 		}
-	}
-	
-	func visibilityToggled() -> Ticker {
-		Ticker(name: name, origin: origin, start: start, offset: offset, visible: !visible)
 	}
 	
 	func toDict() -> [String: Any] {

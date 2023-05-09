@@ -22,7 +22,7 @@ struct TickerView: View {
 	@State var selectedTicker: Int = Storage.int(.selected)
 	@State var isActive: Bool = false
 	@State var updater: Bool = false
-	@State var wasFlashing: Bool = false
+	@State var flashStart: Date? = nil
 //	@State var remainingPower: Int = getRemainingPower()
 	
 	var tickers: [Ticker] { tickerHistory[tickerHistory.count - 1 - versionsBack] }
@@ -116,8 +116,9 @@ struct TickerView: View {
 	func updateHideWindow() {
 		for (i, ticker) in tickers.enumerated() {
 			if ticker.flashing && !ticker.name.contains("/") {
-				if !wasFlashing {
+				if flashStart == nil {
 					selectedTicker = i
+					flashStart = Date.now
 					let executableURL = URL(fileURLWithPath: "/usr/bin/shortcuts")
 					try! Process.run(executableURL, arguments: ["run", "pause"], terminationHandler: nil)
 				}
@@ -129,12 +130,11 @@ struct TickerView: View {
 					hideWindow.setIsVisible(true)
 				}
 				
-				wasFlashing = true
 				return
 			}
 		}
 		
-		wasFlashing = false
+		flashStart = nil
 		hideWindow.close()
 	}
 	
@@ -154,7 +154,7 @@ struct TickerView: View {
 //	}
 	
 	func keyDownFunc(event: NSEvent) {
-		updater.toggle()
+		guard (flashStart?.timeIntervalSinceNow ?? -2) < -1.5 else { return }
 		
 		if event.keyCode == 53 { // esc
 			if currentTicker?.offsetChange != nil {
@@ -163,6 +163,8 @@ struct TickerView: View {
 				NSApplication.shared.hide(nil)
 				NSApplication.shared.unhideWithoutActivation()
 			}
+			
+			updater.toggle()
 		}
 		
 		if event.modifierFlags.contains(.command) {
@@ -176,7 +178,7 @@ struct TickerView: View {
 				Storage.set(selectedTicker, for: .selected)
 			} else if event.characters == "d" {
 				if let currentTicker {
-					setCurrentTicker(currentTicker.visibilityToggled())
+					currentTicker.visible.toggle()
 				}
 			} else if event.characters == "z" {
 				if event.modifierFlags.contains(.shift) {
@@ -207,6 +209,8 @@ struct TickerView: View {
 					Storage.set(selectedTicker, for: .selected)
 				}
 			}
+			
+			updater.toggle()
 			return
 		}
 		
@@ -267,6 +271,8 @@ struct TickerView: View {
 				currentTicker.name += event.characters ?? ""
 			}
 		}
+		
+		updater.toggle()
 	}
 	
 	func storeTickers() {

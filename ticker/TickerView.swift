@@ -154,8 +154,6 @@ struct TickerView: View {
 //	}
 	
 	func keyDownFunc(event: NSEvent) {
-		guard (flashStart?.timeIntervalSinceNow ?? -2) < -1.5 else { return }
-		
 		if event.keyCode == 53 { // esc
 			if currentTicker?.offsetChange != nil {
 				currentTicker?.resetOffset()
@@ -168,7 +166,7 @@ struct TickerView: View {
 		}
 		
 		if event.modifierFlags.contains(.command) {
-			if event.characters == "f" { // vera may want to change this back to space, along with other changes
+			if event.characters == "s" { // vera may want to change this back to space, along with other changes
 				if let currentTicker {
 					setCurrentTicker(currentTicker.activityToggled())
 				}
@@ -176,9 +174,13 @@ struct TickerView: View {
 				setTickers([Ticker()] + tickers)
 				selectedTicker = 0
 				Storage.set(selectedTicker, for: .selected)
-			} else if event.characters == "d" {
+			} else if event.characters == "v" {
 				if let currentTicker {
 					currentTicker.visible.toggle()
+				}
+			} else if event.characters == "g" {
+				if let currentTicker {
+					setCurrentTicker(currentTicker.offsetResolved())
 				}
 			} else if event.characters == "z" {
 				if event.modifierFlags.contains(.shift) {
@@ -186,8 +188,8 @@ struct TickerView: View {
 				} else {
 					versionsBack = min(versionsBack + 1, tickerHistory.count - 1)
 				}
-			} else if event.characters == "œ" {
-				NSApp.terminate(self)
+//			} else if event.characters == "œ" {
+//				NSApp.terminate(self)
 			} else if event.characters == "c" {
 				guard let copyString = currentTicker?.getTimeString(copy: true) else { return }
 				NSPasteboard.general.declareTypes([.string], owner: nil)
@@ -197,10 +199,10 @@ struct TickerView: View {
 				//			} else if event.characters == "f" { // make this d for vera
 				//				showDays.toggle()
 				//				Storage.set(showDays, for: .showDays)
-			} else if event.characters == "s" {
+			} else if event.characters == "t" {
 				showSeconds.toggle()
 				Storage.set(showSeconds, for: .showSeconds)
-			} else if event.characters == "∂" {
+			} else if event.characters == "f" {
 				if tickers.count > selectedTicker {
 					var newTickers = tickers
 					newTickers.remove(at: selectedTicker)
@@ -208,12 +210,53 @@ struct TickerView: View {
 					setTickers(newTickers)
 					Storage.set(selectedTicker, for: .selected)
 				}
+			} else if event.characters == "d" {
+				selectedTicker = (selectedTicker + 1) % tickers.count
+				Storage.set(selectedTicker, for: .selected)
+			} else if event.characters == "∂" {
+				selectedTicker = (tickers.count + selectedTicker - 1) % tickers.count
+				Storage.set(selectedTicker, for: .selected)
+			} else if event.characters == "r" {
+				if let currentTicker {
+					if currentTicker.offsetChange == nil {
+						currentTicker.offsetType = .zero
+						currentTicker.equivalentOffset = false
+						currentTicker.offsetChange = ""
+					} else {
+						currentTicker.equivalentOffset.toggle()
+					}
+				}
+			} else if event.characters == "3" {
+				if let currentTicker {
+					if let offset = currentTicker.offsetChange {
+						if !offset.starts(with: "-") {
+							currentTicker.offsetChange = "-" + offset
+						} else {
+							currentTicker.offsetChange = String(offset.dropFirst())
+						}
+					} else {
+						currentTicker.offsetType = .neg
+						currentTicker.equivalentOffset = false
+						currentTicker.offsetChange = ""
+					}
+				}
+			} else if event.characters == "£" {
+				if let currentTicker {
+					currentTicker.offsetType = .pos
+					currentTicker.equivalentOffset = false
+					currentTicker.offsetChange = ""
+				}
+			} else if event.characters == "©" {
+				if currentTicker?.offsetChange != nil {
+					currentTicker?.resetOffset()
+				}
 			}
 			
 			updater.toggle()
 			return
 		}
 		
+		guard (flashStart?.timeIntervalSinceNow ?? -2) < -1.5 else { return }
 		guard let currentTicker else { return }
 		
 		if event.characters == " " {

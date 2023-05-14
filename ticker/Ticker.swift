@@ -15,7 +15,7 @@ enum OffsetType: String {
 	case zero = "<"
 	
 	func eqString() -> String {
-		self == .pos ? "+" : "-"
+		self == .neg ? "+" : "-"
 	}
 }
 
@@ -122,7 +122,10 @@ class Ticker {
 			offsetComp.append(n)
 		}
 		
-		guard !offsetComp.isEmpty && offsetComp.count <= (showSeconds ? 4 : 3) else { return self }
+		guard !offsetComp.isEmpty && offsetComp.count <= (showSeconds ? 4 : 3) else {
+			self.offsetChange = nil
+			return self
+		}
 		
 		let days: Double = (offsetComp.count >= (showSeconds ? 4 : 3)) ? offsetComp[offsetComp.count - (showSeconds ? 4 : 3)] : 0
 		let hours: Double = (offsetComp.count >= (showSeconds ? 3 : 2)) ? offsetComp[offsetComp.count - (showSeconds ? 3 : 2)] : 0

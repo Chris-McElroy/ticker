@@ -23,6 +23,8 @@ struct TickerView: View {
 	@State var isActive: Bool = false
 	@State var updater: Bool = false
 	@State var flashStart: Date? = nil
+	@State var countdownTimer: Timer? = nil
+	@State var activeCountdowns = 2
 //	@State var remainingPower: Int = getRemainingPower()
 	
 	var tickers: [Ticker] { tickerHistory[tickerHistory.count - 1 - versionsBack] }
@@ -72,6 +74,14 @@ struct TickerView: View {
 		}
 		.onReceive(NotificationCenter.default.publisher( for: NSApplication.didResignActiveNotification)) { _ in
 			isActive = false
+			showTotals = false
+			if activeCountdowns < 2 {
+				countdownTimer = Timer.scheduledTimer(withTimeInterval: 300, repeats: false, block: { _ in
+					countdownTimer?.invalidate()
+					countdownTimer = nil
+				})
+			}
+			
 			let topVisible = tickers.firstIndex(where: { $0.visible }) ?? tickers.count
 			let bottomInvisible = tickers.lastIndex(where: { !$0.visible }) ?? 0
 			guard tickers.contains(where: { $0.offsetChange != nil }) || topVisible < bottomInvisible else { return }
@@ -114,28 +124,43 @@ struct TickerView: View {
 	}
 	
 	func updateHideWindow() {
+		activeCountdowns = 0
+		
 		for (i, ticker) in tickers.enumerated() {
 			if ticker.flashing && !ticker.name.contains("/") {
-				if flashStart == nil {
-					selectedTicker = i
-					flashStart = Date.now
-					let executableURL = URL(fileURLWithPath: "/usr/bin/shortcuts")
-					try! Process.run(executableURL, arguments: ["run", "pause"], terminationHandler: nil)
-				}
-				if !isActive  {
-					NSApplication.shared.activate(ignoringOtherApps: true)
-					hideWindow.orderFront(nil)
-				}
-				if !hideWindow.isVisible {
-					hideWindow.setIsVisible(true)
-				}
-				
+				showHideWindow(i)
 				return
+			} else if ticker.active && ticker.validCountdown {
+				activeCountdowns += 1
 			}
+		}
+		
+		
+//		print("here", countdownTimer, activeCountdowns)
+		
+		if activeCountdowns < 2 && countdownTimer == nil {
+			showHideWindow()
+			return
 		}
 		
 		flashStart = nil
 		hideWindow.close()
+	}
+	
+	func showHideWindow(_ i: Int? = nil) {
+		if flashStart == nil {
+			if let i { selectedTicker = i }
+			flashStart = Date.now
+			let executableURL = URL(fileURLWithPath: "/usr/bin/shortcuts")
+			try! Process.run(executableURL, arguments: ["run", "pause"], terminationHandler: nil)
+		}
+		if !isActive  {
+			NSApplication.shared.activate(ignoringOtherApps: true)
+			hideWindow.orderFront(nil)
+		}
+		if !hideWindow.isVisible {
+			hideWindow.setIsVisible(true)
+		}
 	}
 	
 //	func getTimeView() -> some View {
@@ -249,6 +274,14 @@ struct TickerView: View {
 			} else if event.characters == "©" {
 				if currentTicker?.offsetChange != nil {
 					currentTicker?.resetOffset()
+				}
+			} else if event.characters == "®" {
+				if let currentTicker {
+					let newTicker = currentTicker
+					newTicker.offsetType = .zero
+					newTicker.equivalentOffset = false
+					newTicker.offsetChange = showSeconds ? "-22.0" : "-22"
+					setCurrentTicker(newTicker.offsetResolved())
 				}
 			}
 			

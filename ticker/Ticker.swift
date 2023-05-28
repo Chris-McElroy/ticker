@@ -31,6 +31,7 @@ class Ticker {
 	var visible: Bool = true
 	var flashing: Bool = false
 	var wasNegative: Bool = false
+	var validCountdown: Bool = true
 	
 	init() {
 		name = ""
@@ -81,6 +82,7 @@ class Ticker {
 		else if let start { time = Date().timeIntervalSince(start) + offset }
 		else { time = offset }
 		let posTime = abs(time)
+		validCountdown = time < 0 && time > -1800
 		
 		if !showTotals {
 			if wasNegative && time >= 0 {
@@ -145,7 +147,7 @@ class Ticker {
 			newOffset = eqAmt - newOffset
 		}
 		
-		return Ticker(name: name, origin: origin, start: (offsetType == .zero ? now : start), offset: (offsetType == .zero ? 0 : offset) + (offsetType == .neg ? -newOffset : newOffset), visible: visible)
+		return Ticker(name: name, origin: origin, start: (offsetType == .zero ? now : start), offset: (offsetType == .zero ? 0 : offset) + (offsetType == .neg ? -newOffset : newOffset), visible: (offsetType == .zero ? true : visible))
 	}
 	
 	func resetOffset() {

@@ -147,7 +147,9 @@ class Ticker {
 			newOffset = eqAmt - newOffset
 		}
 		
-		return Ticker(name: name, origin: origin, start: (offsetType == .zero ? now : start), offset: (offsetType == .zero ? 0 : offset) + (offsetType == .neg ? -newOffset : newOffset), visible: (offsetType == .zero ? true : visible))
+		return Ticker(name: name, origin: origin, start: (offsetType == .zero ? now : start),
+					  offset: (offsetType == .zero ? 0 : offset) + (offsetType == .neg ? -newOffset : newOffset),
+					  visible: ((offsetType == .zero && start == nil) ? true : visible))
 	}
 	
 	func resetOffset() {

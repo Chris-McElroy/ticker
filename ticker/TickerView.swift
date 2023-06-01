@@ -23,7 +23,7 @@ struct TickerView: View {
 	@State var isActive: Bool = false
 	@State var updater: Bool = false
 	@State var flashStart: Date? = nil
-	@State var countdownTimer: Timer? = nil
+	@State var nextCheckin: Date? = nil
 	@State var activeCountdowns = 2
 //	@State var remainingPower: Int = getRemainingPower()
 	
@@ -50,7 +50,7 @@ struct TickerView: View {
 						}
 						.bold(true)
 					} else {
-						Text(time.time)
+						Text(":" + time.time)
 							.italic(isActive)
 					}
 					Spacer().frame(height: (updater ? 2 : 2))
@@ -76,10 +76,7 @@ struct TickerView: View {
 			isActive = false
 			showTotals = false
 			if activeCountdowns < 2 {
-				countdownTimer = Timer.scheduledTimer(withTimeInterval: 300, repeats: false, block: { _ in
-					countdownTimer?.invalidate()
-					countdownTimer = nil
-				})
+				nextCheckin = .now.advanced(by: 300)
 			}
 			
 			let topVisible = tickers.firstIndex(where: { $0.visible }) ?? tickers.count
@@ -98,7 +95,7 @@ struct TickerView: View {
 		.onAppear {
 			Timer.scheduledTimer(withTimeInterval: 0.2, repeats: true, block: { _ in
 				updater.toggle()
-				updateHideWindow()
+				monitorTickers()
 			})
 //			Timer.scheduledTimer(withTimeInterval: 100, repeats: true, block: { _ in
 //				remainingPower = getRemainingPower()
@@ -123,43 +120,38 @@ struct TickerView: View {
 		setTickers(newTickers)
 	}
 	
-	func updateHideWindow() {
-		activeCountdowns = 0
+	func monitorTickers() {
+		activeCountdowns = tickers.reduce(0, { $0 + ($1.validCountdown ? 1 : 0) })
+		let flashing = tickers.enumerated().first(where: { $0.element.flashing })
+		let shouldHide = tickers.contains(where: { $0.flashing && !$0.name.contains("/") })
+		let checkinsAllowed = !tickers.contains(where: { $0.name == "——" })
 		
-		for (i, ticker) in tickers.enumerated() {
-			if ticker.flashing && !ticker.name.contains("/") {
-				showHideWindow(i)
-				return
-			} else if ticker.active && ticker.validCountdown {
-				activeCountdowns += 1
+		if let flashing {
+			if flashStart == nil {
+				selectedTicker = flashing.offset
+				flashStart = .now.advanced(by: isActive ? -10 : 0)
+				if shouldHide {
+					let executableURL = URL(fileURLWithPath: "/usr/bin/shortcuts")
+					try! Process.run(executableURL, arguments: ["run", "pause"], terminationHandler: nil)
+					hideWindow.orderFront(nil)
+					if !hideWindow.isVisible { hideWindow.setIsVisible(true) }
+				}
+				if !isActive {
+					NSApplication.shared.activate(ignoringOtherApps: true)
+				}
+			} else if !isActive && shouldHide {
+				NSApplication.shared.activate(ignoringOtherApps: true)
+				hideWindow.orderFront(nil)
+				if !hideWindow.isVisible { hideWindow.setIsVisible(true) }
 			}
-		}
-		
-		
-//		print("here", countdownTimer, activeCountdowns)
-		
-		if activeCountdowns < 2 && countdownTimer == nil {
-			showHideWindow()
-			return
-		}
-		
-		flashStart = nil
-		hideWindow.close()
-	}
-	
-	func showHideWindow(_ i: Int? = nil) {
-		if flashStart == nil {
-			if let i { selectedTicker = i }
-			flashStart = Date.now
-			let executableURL = URL(fileURLWithPath: "/usr/bin/shortcuts")
-			try! Process.run(executableURL, arguments: ["run", "pause"], terminationHandler: nil)
-		}
-		if !isActive  {
+		} else if let nextCheckin, nextCheckin <= .now && !isActive && checkinsAllowed {
+			self.nextCheckin = nil
 			NSApplication.shared.activate(ignoringOtherApps: true)
-			hideWindow.orderFront(nil)
-		}
-		if !hideWindow.isVisible {
-			hideWindow.setIsVisible(true)
+			if flashStart == nil { flashStart = .now }
+			hideWindow.close()
+		} else {
+			flashStart = nil
+			hideWindow.close()
 		}
 	}
 	
@@ -289,7 +281,6 @@ struct TickerView: View {
 			return
 		}
 		
-		guard (flashStart?.timeIntervalSinceNow ?? -2) < -1.5 else { return }
 		guard let currentTicker else { return }
 		
 		if event.characters == " " {
@@ -323,6 +314,7 @@ struct TickerView: View {
 			selectedTicker = (tickers.count + selectedTicker - 1) % tickers.count
 			Storage.set(selectedTicker, for: .selected)
 		} else if event.specialKey == .delete {
+			guard (flashStart?.timeIntervalSinceNow ?? -2) < -1 else { return }
 			if currentTicker.offsetChange != nil {
 				if currentTicker.offsetChange == "" {
 					currentTicker.offsetChange = nil
@@ -337,8 +329,10 @@ struct TickerView: View {
 				}
 			}
 		} else if event.specialKey == .carriageReturn {
+			guard (flashStart?.timeIntervalSinceNow ?? -2) < -1 else { return }
 			setCurrentTicker(currentTicker.offsetResolved())
 		} else if event.specialKey == nil {
+			guard (flashStart?.timeIntervalSinceNow ?? -2) < -1 else { return }
 			if currentTicker.offsetChange != nil {
 				for c in (event.characters ?? "").filter({ "0123456789.-".contains($0) }) {
 					currentTicker.offsetChange?.append(c)
@@ -360,7 +354,7 @@ func getCurrentTime(withDay: Bool = false) -> (day: String, time: String) {
 	let comp = Calendar.current.dateComponents([.day, .hour, .minute, .second], from: .now)
 	let hours = comp.hour ?? 0
 //	let hours = ((comp.hour ?? 0) + 11) % 12 + 1 // vera's
-	return (withDay ? String(comp.day ?? 0) + "." : "", tickerString(neg: false, days: withDay ? comp.day ?? 0 : 0, hours: hours, minutes: comp.minute ?? 0, seconds: comp.second ?? 0))
+	return (withDay ? ":" + String(comp.day ?? 0) + "." : ",", tickerString(neg: false, days: withDay ? comp.day ?? 0 : 0, hours: hours, minutes: comp.minute ?? 0, seconds: comp.second ?? 0))
 	
 	// from base 10
 	// let fraction = ((comp.minute ?? 0)*60 + (comp.second ?? 0))/36

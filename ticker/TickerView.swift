@@ -12,6 +12,8 @@ import MediaPlayer
 var showSeconds: Bool = Storage.bool(.showSeconds)
 var showDays: Bool = Storage.bool(.showDays)
 var showTotals: Bool = false
+var checkinThreshold: Double = 2520
+var lastAc = 0
 
 // Load framework
 let bundle = CFBundleCreate(kCFAllocatorDefault, NSURL(fileURLWithPath: "/System/Library/PrivateFrameworks/MediaRemote.framework"))
@@ -75,6 +77,9 @@ struct TickerView: View {
 		.onReceive(NotificationCenter.default.publisher( for: NSApplication.didResignActiveNotification)) { _ in
 			isActive = false
 			showTotals = false
+			checkinThreshold = tickers.first(where: { $0.name == "checkin" })?.offset ?? 2520
+			tickers.forEach { _ = $0.getTimeString() }
+			activeCountdowns = tickers.reduce(0, { $0 + ($1.validCountdown ? 1 : 0) })
 			if activeCountdowns < 2 {
 				nextCheckin = .now.advanced(by: 300)
 			}
@@ -121,10 +126,8 @@ struct TickerView: View {
 	}
 	
 	func monitorTickers() {
-		activeCountdowns = tickers.reduce(0, { $0 + ($1.validCountdown ? 1 : 0) })
 		let flashing = tickers.enumerated().first(where: { $0.element.flashing })
 		let shouldHide = tickers.contains(where: { $0.flashing && !$0.name.contains("/") })
-		let checkinsAllowed = !tickers.contains(where: { $0.name == "——" })
 		
 		if let flashing {
 			if flashStart == nil {
@@ -144,7 +147,7 @@ struct TickerView: View {
 				hideWindow.orderFront(nil)
 				if !hideWindow.isVisible { hideWindow.setIsVisible(true) }
 			}
-		} else if let nextCheckin, nextCheckin <= .now && !isActive && checkinsAllowed {
+		} else if let nextCheckin, nextCheckin <= .now && !isActive {
 			self.nextCheckin = nil
 			NSApplication.shared.activate(ignoringOtherApps: true)
 			if flashStart == nil { flashStart = .now }

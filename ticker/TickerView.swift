@@ -7,7 +7,6 @@
 
 import SwiftUI
 import Combine
-import MediaPlayer
 
 var showSeconds: Bool = Storage.bool(.showSeconds)
 var showDays: Bool = Storage.bool(.showDays)
@@ -65,6 +64,7 @@ struct TickerView: View {
 		.frame(width: 500, height: 500)
 		.onReceive(NotificationCenter.default.publisher( for: NSApplication.didBecomeActiveNotification)) { _ in
 			isActive = true
+			nextCheckin = nil
 //			for ticker in tickers {
 //				ticker.flashing = false
 //			}
@@ -77,12 +77,7 @@ struct TickerView: View {
 		.onReceive(NotificationCenter.default.publisher( for: NSApplication.didResignActiveNotification)) { _ in
 			isActive = false
 			showTotals = false
-			checkinThreshold = tickers.first(where: { $0.name == "checkin" })?.offset ?? 2520
-			tickers.forEach { _ = $0.getTimeString() }
-			activeCountdowns = tickers.reduce(0, { $0 + ($1.validCountdown ? 1 : 0) })
-			if activeCountdowns < 2 {
-				nextCheckin = .now.advanced(by: 300)
-			}
+			setCheckin()
 			
 			let topVisible = tickers.firstIndex(where: { $0.visible }) ?? tickers.count
 			let bottomInvisible = tickers.lastIndex(where: { !$0.visible }) ?? 0
@@ -136,25 +131,43 @@ struct TickerView: View {
 				if shouldHide {
 					let executableURL = URL(fileURLWithPath: "/usr/bin/shortcuts")
 					try! Process.run(executableURL, arguments: ["run", "pause"], terminationHandler: nil)
-					hideWindow.orderFront(nil)
-					if !hideWindow.isVisible { hideWindow.setIsVisible(true) }
 				}
-				if !isActive {
+				if !isActive && !shouldHide {
 					NSApplication.shared.activate(ignoringOtherApps: true)
 				}
-			} else if !isActive && shouldHide {
-				NSApplication.shared.activate(ignoringOtherApps: true)
-				hideWindow.orderFront(nil)
-				if !hideWindow.isVisible { hideWindow.setIsVisible(true) }
 			}
-		} else if let nextCheckin, nextCheckin <= .now && !isActive {
-			self.nextCheckin = nil
-			NSApplication.shared.activate(ignoringOtherApps: true)
-			if flashStart == nil { flashStart = .now }
-			hideWindow.close()
+			if shouldHide {
+				if !hideWindow.isVisible { hideWindow.setIsVisible(true) }
+				if !isActive {
+					hideWindow.orderFront(nil)
+					NSApplication.shared.activate(ignoringOtherApps: true)
+				}
+			}
 		} else {
 			flashStart = nil
 			hideWindow.close()
+		}
+		
+		if let nextCheckin, nextCheckin <= .now {
+			// assumed to not be active bc it's reset when it's active
+			self.nextCheckin = nil
+			flashStart = .now
+			NSApplication.shared.activate(ignoringOtherApps: true)
+		}
+	}
+	
+	func setCheckin() {
+		let silentFlashing = tickers.contains(where: { $0.flashing && $0.name.contains("/") })
+		if silentFlashing {
+			nextCheckin = .now.advanced(by: 120)
+			return
+		}
+		
+		checkinThreshold = tickers.first(where: { $0.name == "checkin" })?.offset ?? 2520
+		tickers.forEach { _ = $0.getTimeString() }
+		activeCountdowns = tickers.reduce(0, { $0 + ($1.validCountdown ? 1 : 0) })
+		if activeCountdowns < 2 {
+			nextCheckin = .now.advanced(by: 300)
 		}
 	}
 	

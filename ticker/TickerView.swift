@@ -23,7 +23,9 @@ struct TickerView: View {
 	@State var selectedTicker: Int = Storage.int(.selected)
 	@State var isActive: Bool = false
 	@State var updater: Bool = false
-	@State var flashStart: Date? = nil
+	@State var blockTime: Date? = nil
+	@State var hiding: Bool = false
+	@State var flashing: Bool = false
 	@State var nextCheckin: Date? = nil
 	@State var activeCountdowns = 2
 //	@State var remainingPower: Int = getRemainingPower()
@@ -121,45 +123,60 @@ struct TickerView: View {
 	}
 	
 	func monitorTickers() {
-		let flashing = tickers.enumerated().first(where: { $0.element.flashing })
-		let shouldHide = tickers.contains(where: { $0.flashing && !$0.name.contains("/") })
+		let hidingTicker = tickers.enumerated().first(where: { $0.element.flashing && !$0.element.name.contains("/") })
+		let flashingTicker = tickers.enumerated().first(where: { $0.element.flashing && $0.element.name.contains("/") })
 		
-		if let flashing {
-			if flashStart == nil {
-				selectedTicker = flashing.offset
-				flashStart = .now.advanced(by: isActive ? -10 : 0)
-				if shouldHide {
+		if let hidingTicker {
+			if !hiding {
+				if !isActive {
+					selectedTicker = hidingTicker.offset
+					blockTime = .now.advanced(by: 1)
 					let executableURL = URL(fileURLWithPath: "/usr/bin/shortcuts")
 					try! Process.run(executableURL, arguments: ["run", "pause"], terminationHandler: nil)
 				}
-				if !isActive && !shouldHide {
-					NSApplication.shared.activate(ignoringOtherApps: true)
-				}
+				hiding = true
 			}
-			if shouldHide {
-				if !hideWindow.isVisible { hideWindow.setIsVisible(true) }
+			if !isActive {
+				NSApplication.shared.activate(ignoringOtherApps: true)
+			}
+			if !hideWindow.isVisible { hideWindow.setIsVisible(true) }
+			hideWindow.orderFront(nil)
+		} else {
+			hiding = false
+			hideWindow.close()
+		}
+		
+		if let flashingTicker {
+			if !flashing {
+				if hiding {
+					flashing = true
+					return
+				}
 				if !isActive {
-					hideWindow.orderFront(nil)
+					selectedTicker = flashingTicker.offset
+					blockTime = .now.advanced(by: 1)
 					NSApplication.shared.activate(ignoringOtherApps: true)
 				}
+				flashing = true
 			}
 		} else {
-			flashStart = nil
-			hideWindow.close()
+			flashing = false
 		}
 		
 		if let nextCheckin, nextCheckin <= .now {
 			// assumed to not be active bc it's reset when it's active
 			self.nextCheckin = nil
-			flashStart = .now
-			NSApplication.shared.activate(ignoringOtherApps: true)
+			activeCountdowns = tickers.reduce(0, { $0 + ($1.validCountdown ? 1 : 0) })
+			if activeCountdowns < 2 {
+				blockTime = .now.advanced(by: 1)
+				NSApplication.shared.activate(ignoringOtherApps: true)
+			}
 		}
 	}
 	
 	func setCheckin() {
-		let silentFlashing = tickers.contains(where: { $0.flashing && $0.name.contains("/") })
-		if silentFlashing {
-			nextCheckin = .now.advanced(by: 120)
+		if flashing {
+			nextCheckin = .now.advanced(by: 60)
 			return
 		}
 		
@@ -330,7 +347,7 @@ struct TickerView: View {
 			selectedTicker = (tickers.count + selectedTicker - 1) % tickers.count
 			Storage.set(selectedTicker, for: .selected)
 		} else if event.specialKey == .delete {
-			guard (flashStart?.timeIntervalSinceNow ?? -2) < -1 else { return }
+			guard (blockTime ?? .now) <= .now else { return }
 			if currentTicker.offsetChange != nil {
 				if currentTicker.offsetChange == "" {
 					currentTicker.offsetChange = nil
@@ -345,10 +362,10 @@ struct TickerView: View {
 				}
 			}
 		} else if event.specialKey == .carriageReturn {
-			guard (flashStart?.timeIntervalSinceNow ?? -2) < -1 else { return }
+			guard (blockTime ?? .now) <= .now else { return }
 			setCurrentTicker(currentTicker.offsetResolved())
 		} else if event.specialKey == nil {
-			guard (flashStart?.timeIntervalSinceNow ?? -2) < -1 else { return }
+			guard (blockTime ?? .now) <= .now else { return }
 			if currentTicker.offsetChange != nil {
 				for c in (event.characters ?? "").filter({ "0123456789.-".contains($0) }) {
 					currentTicker.offsetChange?.append(c)

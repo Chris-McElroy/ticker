@@ -316,11 +316,7 @@ struct TickerView: View {
 		
 		guard let currentTicker else { return }
 		
-		if event.characters == " " {
-			if currentTicker.offsetChange == nil {
-				currentTicker.name += " "
-			}
-		} else if event.characters == "+" {
+		if event.characters == "+" {
 			currentTicker.offsetType = .pos
 			currentTicker.equivalentOffset = false
 			currentTicker.offsetChange = ""

@@ -82,7 +82,7 @@ class Ticker {
 		else if let start { time = Date().timeIntervalSince(start) + offset }
 		else { time = offset }
 		let posTime = abs(time)
-		validCountdown = time < 0 && time > -checkinThreshold
+		validCountdown = time < 0 && time > -checkinThreshold && active
 		
 		if !showTotals {
 			if wasNegative && time >= 0 {

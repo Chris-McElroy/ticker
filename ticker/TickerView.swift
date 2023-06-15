@@ -167,7 +167,10 @@ struct TickerView: View {
 			// assumed to not be active bc it's reset when it's active
 			self.nextCheckin = nil
 			activeCountdowns = tickers.reduce(0, { $0 + ($1.validCountdown ? 1 : 0) })
-			if activeCountdowns < 2 {
+			if activeCountdowns < 2 || flashing {
+				if let flashingTicker {
+					selectedTicker = flashingTicker.offset
+				}
 				blockTime = .now.advanced(by: 1)
 				NSApplication.shared.activate(ignoringOtherApps: true)
 			}
@@ -180,7 +183,8 @@ struct TickerView: View {
 			return
 		}
 		
-		checkinThreshold = tickers.first(where: { $0.name == "checkin" })?.offset ?? 2520
+		checkinThreshold = abs(tickers.first(where: { $0.name == "checkin" })?.offset ?? 2520)
+		if checkinThreshold < 60 { return }
 		tickers.forEach { _ = $0.getTimeString() }
 		activeCountdowns = tickers.reduce(0, { $0 + ($1.validCountdown ? 1 : 0) })
 		if activeCountdowns < 2 {

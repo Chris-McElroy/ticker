@@ -11,10 +11,15 @@ import HotKey
 @main
 struct tickerApp: App {
 	@NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+	var screenResChanged = NotificationCenter.default.publisher(for: NSApplication.didChangeScreenParametersNotification)
 	
     var body: some Scene {
-		WindowGroup() {
+		WindowGroup(id: "main") {
 			TickerView()
+				.onReceive(screenResChanged, perform: { _ in
+					redrawWindows()
+				})
+//				.onAppear(perform: redrawWindows)
         }
 		.windowResizability(.contentSize)
     }
@@ -48,23 +53,31 @@ struct tickerApp: App {
 //	}
 //}
 
-let hideWindow = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 2000, height: 2000), styleMask: [], backing: .buffered, defer: false)
+var hideWindow = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 100, height: 100), styleMask: [],backing: .buffered, defer: false)
+
+func redrawWindows() {
+	guard let screenSize = NSScreen.main?.frame else { return }
+	hideWindow.setFrame(NSRect(x: 0, y: 0, width: screenSize.width, height: screenSize.height), display: false)
+	
+	guard let window = NSApplication.shared.windows.first(where: { $0.identifier?.rawValue == "main-AppWindow-1" }) else { return }
+	window.setFrameOrigin(NSPoint(x: screenSize.width - 500, y: 0))
+}
 
 class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 //	var statusBar: StatusBarController?
 	let activationKey = HotKey(key: .a, modifiers: [.option])
 	// vera's keys:
 //	let activationKey = HotKey(key: .z, modifiers: [.command, .option])
-//	let clickableKey = HotKey(key: .x, modifiers: [.command, .option])
-	
+//	let clickableKey = HotKey(key: .a, modifiers: [.option, .shift])
 	
 	func applicationDidFinishLaunching(_ notification: Notification) {
-		if let window = NSApplication.shared.windows.first {
+		if let window = NSApplication.shared.windows.first(where: { $0.identifier?.rawValue == "main-AppWindow-1" }) {
 			setupWindow(window)
 		}
 		
 		hideWindow.isReleasedWhenClosed = false
 		hideWindow.backgroundColor = NSColor.black
+		redrawWindows()
 		
 		activationKey.keyDownHandler = {
 			NSApplication.shared.activate(ignoringOtherApps: true)
@@ -97,10 +110,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 //			reattachKeyPress()
 //			let view = TickerView()
 //
-//			window.contentView = NSHostingView(rootView: view)
+//			window.contentfView = NSHostingView(rootView: view)
 //			window.makeKeyAndOrderFront(nil)
 		
-		//Initialising the status bar
+		// Initialising the status bar
 //		statusBar = StatusBarController.main
 		return
 	}
@@ -140,6 +153,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 //		let newFramePreference = "\(Int(windowX)) \(Int(windowY)) \(Int(contentWidth)) \(Int(contentHeight)) 0 0 \(Int(screenWidth)) \(Int(screenHeightWithoutMenuBar))"
 //		UserDefaults.standard.set("1450 0 44 126 0 0 1512 950 ", forKey: "NSWindow Frame cornerPos")
 //	}
+	
+//	func application
 	
 	func windowShouldClose(_ sender: NSWindow) -> Bool {
 		NSApplication.shared.hide(nil)

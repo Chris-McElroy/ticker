@@ -167,7 +167,7 @@ struct TickerView: View {
 			// assumed to not be active bc it's reset when it's active
 			self.nextCheckin = nil
 			activeCountdowns = tickers.reduce(0, { $0 + ($1.validCountdown ? 1 : 0) })
-			if activeCountdowns < 2 || flashing {
+			if activeCountdowns < 1 || flashing {
 				if let flashingTicker {
 					selectedTicker = flashingTicker.offset
 				}
@@ -187,7 +187,7 @@ struct TickerView: View {
 		if checkinThreshold < 60 { return }
 		tickers.forEach { _ = $0.getTimeString() }
 		activeCountdowns = tickers.reduce(0, { $0 + ($1.validCountdown ? 1 : 0) })
-		if activeCountdowns < 2 {
+		if activeCountdowns < 1 {
 			nextCheckin = .now.advanced(by: 300)
 		}
 	}

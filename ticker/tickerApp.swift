@@ -18,8 +18,9 @@ struct tickerApp: App {
 			TickerView()
 				.onReceive(screenResChanged, perform: { _ in
 					redrawWindows()
+					WindowHelper.refreshScripts()
 				})
-//				.onAppear(perform: redrawWindows)
+				.onAppear(perform: redrawWindows)
         }
 		.windowResizability(.contentSize)
     }
@@ -54,6 +55,7 @@ struct tickerApp: App {
 //}
 
 var hideWindow = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 100, height: 100), styleMask: [],backing: .buffered, defer: false)
+var currentScreen = NSRect(x: 0, y: 0, width: 1000, height: 1000)
 
 func redrawWindows() {
 	guard let screenSize = NSScreen.main?.frame else { return }
@@ -70,6 +72,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 //	let activationKey = HotKey(key: .z, modifiers: [.command, .option])
 //	let clickableKey = HotKey(key: .a, modifiers: [.option, .shift])
 	
+	let arrangeSmallKey = HotKey(key: .q, modifiers: [.command, .option])
+	let arrangeMediumKey = HotKey(key: .a, modifiers: [.command, .option])
+	let arrangeMaxKey = HotKey(key: .z, modifiers: [.command, .option])
+	let arrangeLeftKey = HotKey(key: .one, modifiers: [.command])
+	let arrangeRightKey = HotKey(key: .two, modifiers: [.command])
+	
 	func applicationDidFinishLaunching(_ notification: Notification) {
 		if let window = NSApplication.shared.windows.first(where: { $0.identifier?.rawValue == "main-AppWindow-1" }) {
 			setupWindow(window)
@@ -78,9 +86,40 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 		hideWindow.isReleasedWhenClosed = false
 		hideWindow.backgroundColor = NSColor.black
 		redrawWindows()
+		WindowHelper.refreshScripts()
 		
 		activationKey.keyDownHandler = {
 			NSApplication.shared.activate(ignoringOtherApps: true)
+		}
+		
+		arrangeSmallKey.keyDownHandler = {
+			DispatchQueue(label: "windower", qos: .userInitiated).async {
+				WindowHelper.arrangeSmall?.executeAndReturnError(nil)
+			}
+		}
+		
+		arrangeMediumKey.keyDownHandler = {
+			DispatchQueue(label: "windower", qos: .userInitiated).async {
+				WindowHelper.arrangeMedium?.executeAndReturnError(nil)
+			}
+		}
+		
+		arrangeMaxKey.keyDownHandler = {
+			DispatchQueue(label: "windower", qos: .userInitiated).async {
+				WindowHelper.arrangeMax?.executeAndReturnError(nil)
+			}
+		}
+		
+		arrangeLeftKey.keyDownHandler = {
+			DispatchQueue(label: "windower", qos: .userInitiated).async {
+				WindowHelper.arrangeLeft?.executeAndReturnError(nil)
+			}
+		}
+		
+		arrangeRightKey.keyDownHandler = {
+			DispatchQueue(label: "windower", qos: .userInitiated).async {
+				WindowHelper.arrangeRight?.executeAndReturnError(nil)
+			}
 		}
 		
 		// vera's

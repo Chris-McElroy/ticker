@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		1E2A6EF5296CFE3200B21838 /* Ticker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E2A6EF4296CFE3200B21838 /* Ticker.swift */; };
+		1E6F84F42A59CFFB00B43C2A /* WindowHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E6F84F32A59CFFB00B43C2A /* WindowHelper.swift */; };
 		1E88C96F2922EBE700E603EA /* StorageHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E88C96E2922EBE700E603EA /* StorageHelper.swift */; };
 		1E9BD80A291DB9F200924734 /* KeyPressHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E9BD809291DB9F200924734 /* KeyPressHelper.swift */; };
 		1E9E403A295D42220093B724 /* GeneralHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E9E4039295D42220093B724 /* GeneralHelper.swift */; };
@@ -21,6 +22,8 @@
 
 /* Begin PBXFileReference section */
 		1E2A6EF4296CFE3200B21838 /* Ticker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Ticker.swift; sourceTree = "<group>"; };
+		1E6F84F22A59C52A00B43C2A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		1E6F84F32A59CFFB00B43C2A /* WindowHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowHelper.swift; sourceTree = "<group>"; };
 		1E88C96E2922EBE700E603EA /* StorageHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageHelper.swift; sourceTree = "<group>"; };
 		1E9BD809291DB9F200924734 /* KeyPressHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyPressHelper.swift; sourceTree = "<group>"; };
 		1E9E4039295D42220093B724 /* GeneralHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneralHelper.swift; sourceTree = "<group>"; };
@@ -64,9 +67,11 @@
 		1EE25A30291D2AF100F2A038 /* ticker */ = {
 			isa = PBXGroup;
 			children = (
+				1E6F84F22A59C52A00B43C2A /* Info.plist */,
 				1EE25A31291D2AF100F2A038 /* tickerApp.swift */,
 				1EB35D72292629BC0031101C /* PowerHelper.swift */,
 				1E88C96E2922EBE700E603EA /* StorageHelper.swift */,
+				1E6F84F32A59CFFB00B43C2A /* WindowHelper.swift */,
 				1EE25A33291D2AF100F2A038 /* TickerView.swift */,
 				1E2A6EF4296CFE3200B21838 /* Ticker.swift */,
 				1E9E4039295D42220093B724 /* GeneralHelper.swift */,
@@ -167,6 +172,7 @@
 				1E2A6EF5296CFE3200B21838 /* Ticker.swift in Sources */,
 				1E9E403A295D42220093B724 /* GeneralHelper.swift in Sources */,
 				1EE25A32291D2AF100F2A038 /* tickerApp.swift in Sources */,
+				1E6F84F42A59CFFB00B43C2A /* WindowHelper.swift in Sources */,
 				1E88C96F2922EBE700E603EA /* StorageHelper.swift in Sources */,
 				1EB35D73292629BC0031101C /* PowerHelper.swift in Sources */,
 			);
@@ -302,6 +308,8 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = ticker/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "";
 				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -330,6 +338,8 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = ticker/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "";
 				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (

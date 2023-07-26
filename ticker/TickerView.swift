@@ -53,7 +53,7 @@ struct TickerView: View {
 						}
 						.bold(true)
 					} else {
-						Text(":" + time.time)
+						Text(time.time)
 							.italic(isActive)
 					}
 					Spacer().frame(height: (updater ? 2 : 2))
@@ -250,9 +250,9 @@ struct TickerView: View {
 				NSPasteboard.general.setString(copyString, forType: .string)
 			} else if event.characters == "a" {
 				showTotals.toggle()
-				//			} else if event.characters == "f" { // make this d for vera
-				//				showDays.toggle()
-				//				Storage.set(showDays, for: .showDays)
+			} else if event.characters == "i" { // make this d for vera
+				showDays.toggle()
+				Storage.set(showDays, for: .showDays)
 			} else if event.characters == "t" {
 				showSeconds.toggle()
 				Storage.set(showSeconds, for: .showSeconds)
@@ -384,10 +384,11 @@ struct TickerView: View {
 }
 
 func getCurrentTime(withDay: Bool = false) -> (day: String, time: String) {
-	let comp = Calendar.current.dateComponents([.day, .hour, .minute, .second], from: .now)
+	let comp = Calendar.current.dateComponents([.day, .hour, .minute, .second, .weekday], from: .now)
 	let hours = comp.hour ?? 0
+	let weekday = ["x", "u", "m", "t", "w", "r", "f", "s"][comp.weekday ?? 0]
 //	let hours = ((comp.hour ?? 0) + 11) % 12 + 1 // vera's
-	return (withDay ? ":" + String(comp.day ?? 0) + "." : ",", tickerString(neg: false, days: withDay ? comp.day ?? 0 : 0, hours: hours, minutes: comp.minute ?? 0, seconds: comp.second ?? 0))
+	return (weekday + ":" + String(comp.day ?? 0) + ".", (showDays ? weekday + ":" : (withDay ? "" : ",")) + tickerString(neg: false, days: showDays ? comp.day ?? 0 : 0, hours: hours, minutes: comp.minute ?? 0, seconds: comp.second ?? 0))
 	
 	// from base 10
 	// let fraction = ((comp.minute ?? 0)*60 + (comp.second ?? 0))/36

@@ -44,6 +44,7 @@ struct TickerView: View {
 							.underline(isActive && i == selectedTicker)
 							.italic(!tickers[i].active)
 							.opacity(tickers[i].visible ? 1 : (isActive ? 0.3 : 0))
+							.background(tickers[i].visible || isActive ? .black.opacity(0.5) : .clear)
 					}
 					let time = getCurrentTime(withDay: showDays || isActive)
 					if !showDays && isActive {
@@ -51,10 +52,12 @@ struct TickerView: View {
 							Text(time.day).opacity(0.3)
 							Text(time.time.trimmingPrefix(time.day))
 						}
+						.background(.black.opacity(0.5))
 						.bold(true)
 					} else {
 						Text(time.time)
 							.italic(isActive)
+							.background(.black.opacity(0.5))
 					}
 					Spacer().frame(height: (updater ? 2 : 2))
 				}

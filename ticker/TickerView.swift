@@ -273,7 +273,7 @@ struct TickerView: View {
 			} else if event.characters == "∂" {
 				selectedTicker = (tickers.count + selectedTicker - 1) % tickers.count
 				Storage.set(selectedTicker, for: .selected)
-			} else if event.characters == "r" {
+			} else if event.characters == "®" {
 				if let currentTicker {
 					if currentTicker.offsetChange == nil {
 						currentTicker.offsetType = .zero
@@ -307,7 +307,7 @@ struct TickerView: View {
 				if currentTicker?.offsetChange != nil {
 					currentTicker?.resetOffset()
 				}
-			} else if event.characters == "®" {
+			} else if event.characters == "r" {
 				if let currentTicker {
 					let newTicker = currentTicker
 					newTicker.offsetType = .zero

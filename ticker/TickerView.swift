@@ -79,7 +79,7 @@ struct TickerView: View {
 //				Storage.set(selectedTicker, for: .selected)
 //			}
 		}
-		.onReceive(NotificationCenter.default.publisher( for: NSApplication.didResignActiveNotification)) { _ in
+		.onReceive(NotificationCenter.default.publisher(for: NSApplication.didResignActiveNotification)) { _ in
 			isActive = false
 			showTotals = false
 			setCheckin()
@@ -106,7 +106,19 @@ struct TickerView: View {
 //				remainingPower = getRemainingPower()
 //			})
 		}
-    }
+		.onAppear {
+			wakeFromSleepFunc = {
+				if let (i, walkTicker) = tickers.enumerated().first(where: { $0.element.name.contains("walk") }) {
+					selectedTicker = i
+					let newTicker = walkTicker
+					newTicker.offsetType = .zero
+					newTicker.equivalentOffset = false
+					newTicker.offsetChange = showSeconds ? "-22.0" : "-22"
+					setCurrentTicker(newTicker.offsetResolved())
+				}
+			}
+		}
+	}
 	
 	func setTickers(_ newTickers: [Ticker]) {
 		if versionsBack != 0 {

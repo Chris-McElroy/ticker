@@ -54,8 +54,9 @@ struct tickerApp: App {
 //	}
 //}
 
-var hideWindow = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 100, height: 100), styleMask: [],backing: .buffered, defer: false)
+var hideWindow = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 100, height: 100), styleMask: [], backing: .buffered, defer: false)
 var currentScreen = NSRect(x: 0, y: 0, width: 1000, height: 1000)
+var wakeFromSleepFunc: (() -> Void)? = nil
 
 func redrawWindows() {
 	guard let screenSize = NSScreen.main?.frame else { return }
@@ -154,6 +155,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 		
 		// Initialising the status bar
 //		statusBar = StatusBarController.main
+		
+		let notificationCenter = NSWorkspace.shared.notificationCenter
+		notificationCenter.addObserver(forName: NSWorkspace.screensDidWakeNotification, object: nil, queue: nil, using: { _ in
+			wakeFromSleepFunc?()
+		})
+		
 		return
 	}
 	

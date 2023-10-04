@@ -59,11 +59,22 @@ var currentScreen = NSRect(x: 0, y: 0, width: 1000, height: 1000)
 var wakeFromSleepFunc: (() -> Void)? = nil
 
 func redrawWindows() {
+    setBrightness()
+    
 	guard let screenSize = NSScreen.main?.frame else { return }
 	hideWindow.setFrame(NSRect(x: 0, y: 0, width: screenSize.width, height: screenSize.height), display: false)
 	
 	guard let window = NSApplication.shared.windows.first(where: { $0.identifier?.rawValue == "main-AppWindow-1" }) else { return }
 	window.setFrameOrigin(NSPoint(x: screenSize.width - 500, y: 0))
+}
+
+func setBrightness() {
+    let executableURL = URL(fileURLWithPath: "/usr/bin/shortcuts")
+    if NSScreen.main?.frame.width ?? 0 > 1512 {
+        try! Process.run(executableURL, arguments: ["run", "dim"], terminationHandler: nil)
+    } else {
+        try! Process.run(executableURL, arguments: ["run", "brighten"], terminationHandler: nil)
+    }
 }
 
 class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {

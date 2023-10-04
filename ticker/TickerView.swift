@@ -111,10 +111,14 @@ struct TickerView: View {
 				if let (i, walkTicker) = tickers.enumerated().first(where: { $0.element.name.contains("walk") }) {
 					selectedTicker = i
 					let newTicker = walkTicker
-					newTicker.offsetType = .zero
-					newTicker.equivalentOffset = false
-					newTicker.offsetChange = showSeconds ? "-22.0" : "-22"
-					setCurrentTicker(newTicker.offsetResolved())
+                    guard let start = newTicker.start else { return }
+                    var time = Date().timeIntervalSince(start) + newTicker.offset
+                    if time >= 0 { time += 900 }
+                    let change = Int(time/900)*15
+                    newTicker.offsetType = .neg
+                    newTicker.equivalentOffset = false
+                    newTicker.offsetChange = showSeconds ? "\(change).0" : "\(change)"
+                    setCurrentTicker(newTicker.offsetResolved())
 				}
 			}
 		}
@@ -322,10 +326,14 @@ struct TickerView: View {
 			} else if event.characters == "r" {
 				if let currentTicker {
 					let newTicker = currentTicker
-					newTicker.offsetType = .zero
-					newTicker.equivalentOffset = false
-					newTicker.offsetChange = showSeconds ? "-22.0" : "-22"
-					setCurrentTicker(newTicker.offsetResolved())
+                    guard let start = newTicker.start else { return }
+                    var time = Date().timeIntervalSince(start) + newTicker.offset
+                    if time >= 0 { time += 900 }
+                    let change = Int(time/900)*15
+                    newTicker.offsetType = .neg
+                    newTicker.equivalentOffset = false
+                    newTicker.offsetChange = showSeconds ? "\(change).0" : "\(change)"
+                    setCurrentTicker(newTicker.offsetResolved())
 				}
 			}
 			

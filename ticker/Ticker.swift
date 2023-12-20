@@ -31,7 +31,7 @@ class Ticker {
 	var visible: Bool = true
 	var flashing: Bool = false
 	var wasNegative: Bool = false
-	var validCountdown: Bool = true
+//	var validCountdown: Bool = true
 	
 	init() {
 		name = ""
@@ -82,7 +82,7 @@ class Ticker {
 		else if let start { time = Date().timeIntervalSince(start) + offset }
 		else { time = offset }
 		let posTime = abs(time)
-		validCountdown = time < 0 && time > -checkinThreshold && active
+//		validCountdown = time < 0 && time > -checkinThreshold && active
 		
 		if !showTotals {
 			if wasNegative && time >= 0 {

@@ -11,7 +11,7 @@ import Combine
 var showSeconds: Bool = Storage.bool(.showSeconds)
 var showDays: Bool = Storage.bool(.showDays)
 var showTotals: Bool = false
-var checkinThreshold: Double = 2520
+//var checkinThreshold: Double = 2520
 var lastAc = 0
 
 // Load framework
@@ -26,7 +26,7 @@ struct TickerView: View {
 	@State var blockTime: Date? = nil
 	@State var hiding: Bool = false
 	@State var flashing: Bool = false
-	@State var nextCheckin: Date? = nil
+//	@State var nextCheckin: Date? = nil
 	@State var activeCountdowns = 2
 //	@State var remainingPower: Int = getRemainingPower()
 	
@@ -69,7 +69,7 @@ struct TickerView: View {
 		.frame(width: 500, height: 500)
 		.onReceive(NotificationCenter.default.publisher( for: NSApplication.didBecomeActiveNotification)) { _ in
 			isActive = true
-			nextCheckin = nil
+//			nextCheckin = nil
 //			for ticker in tickers {
 //				ticker.flashing = false
 //			}
@@ -82,7 +82,7 @@ struct TickerView: View {
 		.onReceive(NotificationCenter.default.publisher(for: NSApplication.didResignActiveNotification)) { _ in
 			isActive = false
 			showTotals = false
-			setCheckin()
+//			setCheckin()
 			
 			let topVisible = tickers.firstIndex(where: { $0.visible }) ?? tickers.count
 			let bottomInvisible = tickers.lastIndex(where: { !$0.visible }) ?? 0
@@ -182,34 +182,34 @@ struct TickerView: View {
 			flashing = false
 		}
 		
-		if let nextCheckin, nextCheckin <= .now {
-			// assumed to not be active bc it's reset when it's active
-			self.nextCheckin = nil
-			activeCountdowns = tickers.reduce(0, { $0 + ($1.validCountdown ? 1 : 0) })
-			if activeCountdowns < 1 || flashing {
-				if let flashingTicker {
-					selectedTicker = flashingTicker.offset
-				}
-				blockTime = .now.advanced(by: 1)
-				NSApplication.shared.activate(ignoringOtherApps: true)
-			}
-		}
+//		if let nextCheckin, nextCheckin <= .now {
+//			// assumed to not be active bc it's reset when it's active
+//			self.nextCheckin = nil
+//			activeCountdowns = tickers.reduce(0, { $0 + ($1.validCountdown ? 1 : 0) })
+//			if activeCountdowns < 1 || flashing {
+//				if let flashingTicker {
+//					selectedTicker = flashingTicker.offset
+//				}
+//				blockTime = .now.advanced(by: 1)
+//				NSApplication.shared.activate(ignoringOtherApps: true)
+//			}
+//		}
 	}
 	
-	func setCheckin() {
-		if flashing {
-			nextCheckin = .now.advanced(by: 60)
-			return
-		}
-		
-		checkinThreshold = abs(tickers.first(where: { $0.name == "checkin" })?.offset ?? 2520)
-		if checkinThreshold < 60 { return }
-		tickers.forEach { _ = $0.getTimeString() }
-		activeCountdowns = tickers.reduce(0, { $0 + ($1.validCountdown ? 1 : 0) })
-		if activeCountdowns < 1 {
-			nextCheckin = .now.advanced(by: 300)
-		}
-	}
+//	func setCheckin() {
+//		if flashing {
+//			nextCheckin = .now.advanced(by: 60)
+//			return
+//		}
+//		
+//		checkinThreshold = abs(tickers.first(where: { $0.name == "checkin" })?.offset ?? 2520)
+//		if checkinThreshold < 60 { return }
+//		tickers.forEach { _ = $0.getTimeString() }
+//		activeCountdowns = tickers.reduce(0, { $0 + ($1.validCountdown ? 1 : 0) })
+//		if activeCountdowns < 1 {
+//			nextCheckin = .now.advanced(by: 300)
+//		}
+//	}
 	
 //	func getTimeView() -> some View {
 //		let time = getCurrentTime().split(separator: ".")

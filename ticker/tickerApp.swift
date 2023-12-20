@@ -21,6 +21,7 @@ struct tickerApp: App {
 					WindowHelper.refreshScripts()
 				})
 				.onAppear(perform: redrawWindows)
+                .font(Font.custom("Baskerville", size: 14.0))
         }
 		.windowResizability(.contentSize)
     }
@@ -72,8 +73,6 @@ func setBrightness() {
     let executableURL = URL(fileURLWithPath: "/usr/bin/shortcuts")
     if NSScreen.main?.frame.width ?? 0 > 1512 {
         try! Process.run(executableURL, arguments: ["run", "dim"], terminationHandler: nil)
-    } else {
-        try! Process.run(executableURL, arguments: ["run", "brighten"], terminationHandler: nil)
     }
 }
 

@@ -150,8 +150,8 @@ struct TickerView: View {
 				if !isActive {
 					selectedTicker = hidingTicker.offset
 					blockTime = .now.advanced(by: 1)
-					let executableURL = URL(fileURLWithPath: "/usr/bin/shortcuts")
-					try! Process.run(executableURL, arguments: ["run", "pause"], terminationHandler: nil)
+//					let executableURL = URL(fileURLWithPath: "/usr/bin/shortcuts")
+//					try! Process.run(executableURL, arguments: ["run", "pause"], terminationHandler: nil)
 				}
 				hiding = true
 			}

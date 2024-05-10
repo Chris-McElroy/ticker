@@ -78,16 +78,25 @@ func setBrightness() {
 
 class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 //	var statusBar: StatusBarController?
-	let activationKey = HotKey(key: .a, modifiers: [.option])
+//	let activationKey = HotKey(key: .z, modifiers: [.control])
 	// vera's keys:
 //	let activationKey = HotKey(key: .z, modifiers: [.command, .option])
 //	let clickableKey = HotKey(key: .a, modifiers: [.option, .shift])
 	
-	let arrangeSmallKey = HotKey(key: .q, modifiers: [.command, .option])
+    let arrangeSmallKey = HotKey(key: .q, modifiers: [.command, .option])
 	let arrangeMediumKey = HotKey(key: .a, modifiers: [.command, .option])
 	let arrangeMaxKey = HotKey(key: .z, modifiers: [.command, .option])
-	let arrangeLeftKey = HotKey(key: .one, modifiers: [.command])
-	let arrangeRightKey = HotKey(key: .two, modifiers: [.command])
+//    let arrangeFullKey = HotKey(key: .return, modifiers: [.command, .option])
+    let arrangeLeftKey = HotKey(key: .one, modifiers: [.command, .option])
+    let arrangeRightKey = HotKey(key: .two, modifiers: [.command, .option])
+    
+    
+//    let arrangeSmallerKey = HotKey(key: .downArrow, modifiers: [.command, .option])
+//    let arrangeLargerKey = HotKey(key: .upArrow, modifiers: [.command, .option])
+//    let arrangeCenterKey = HotKey(key: .rightShift, modifiers: [.command, .option])
+//    let arrangeFullKey = HotKey(key: .return, modifiers: [.command, .option])
+//    let arrangeLeftKey = HotKey(key: .leftArrow, modifiers: [.command, .option])
+//    let arrangeRightKey = HotKey(key: .rightArrow, modifiers: [.command, .option])
 	
 	func applicationDidFinishLaunching(_ notification: Notification) {
 		if let window = NSApplication.shared.windows.first(where: { $0.identifier?.rawValue == "main-AppWindow-1" }) {
@@ -99,27 +108,33 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 		redrawWindows()
 		WindowHelper.refreshScripts()
 		
-		activationKey.keyDownHandler = {
-			NSApplication.shared.activate(ignoringOtherApps: true)
-		}
+//		activationKey.keyDownHandler = {
+//			NSApplication.shared.activate(ignoringOtherApps: true)
+//		}
 		
-		arrangeSmallKey.keyDownHandler = {
+        arrangeSmallKey.keyDownHandler = {
 			DispatchQueue(label: "windower", qos: .userInitiated).async {
 				WindowHelper.arrangeSmall?.executeAndReturnError(nil)
 			}
 		}
 		
-		arrangeMediumKey.keyDownHandler = {
+        arrangeMediumKey.keyDownHandler = {
 			DispatchQueue(label: "windower", qos: .userInitiated).async {
 				WindowHelper.arrangeMedium?.executeAndReturnError(nil)
 			}
 		}
-		
-		arrangeMaxKey.keyDownHandler = {
-			DispatchQueue(label: "windower", qos: .userInitiated).async {
-				WindowHelper.arrangeMax?.executeAndReturnError(nil)
-			}
-		}
+        
+        arrangeMaxKey.keyDownHandler = {
+            DispatchQueue(label: "windower", qos: .userInitiated).async {
+                WindowHelper.arrangeMax?.executeAndReturnError(nil)
+            }
+        }
+//        
+//        arrangeFullKey.keyDownHandler = {
+//            DispatchQueue(label: "windower", qos: .userInitiated).async {
+//                WindowHelper.arrangeLeft?.executeAndReturnError(nil)
+//            }
+//        }
 		
 		arrangeLeftKey.keyDownHandler = {
 			DispatchQueue(label: "windower", qos: .userInitiated).async {

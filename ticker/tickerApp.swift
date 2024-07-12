@@ -18,7 +18,7 @@ struct tickerApp: App {
 			TickerView()
 				.onReceive(screenResChanged, perform: { _ in
 					redrawWindows()
-					WindowHelper.refreshScripts()
+//					WindowHelper.refreshScripts()
 				})
 				.onAppear(perform: redrawWindows)
                 .font(Font.custom("Baskerville", size: 14.0))
@@ -87,8 +87,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 	let arrangeMediumKey = HotKey(key: .a, modifiers: [.command, .option])
 	let arrangeMaxKey = HotKey(key: .z, modifiers: [.command, .option])
 //    let arrangeFullKey = HotKey(key: .return, modifiers: [.command, .option])
-    let arrangeLeftKey = HotKey(key: .one, modifiers: [.command, .option])
-    let arrangeRightKey = HotKey(key: .two, modifiers: [.command, .option])
+    let arrangeLeftKey = HotKey(key: .one, modifiers: [.command])
+    let arrangeRightKey = HotKey(key: .two, modifiers: [.command])
     
     
 //    let arrangeSmallerKey = HotKey(key: .downArrow, modifiers: [.command, .option])
@@ -106,29 +106,29 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 		hideWindow.isReleasedWhenClosed = false
 		hideWindow.backgroundColor = NSColor.black
 		redrawWindows()
-		WindowHelper.refreshScripts()
+//		WindowHelper.refreshScripts()
 		
 //		activationKey.keyDownHandler = {
 //			NSApplication.shared.activate(ignoringOtherApps: true)
 //		}
 		
-        arrangeSmallKey.keyDownHandler = {
-			DispatchQueue(label: "windower", qos: .userInitiated).async {
-				WindowHelper.arrangeSmall?.executeAndReturnError(nil)
-			}
-		}
-		
-        arrangeMediumKey.keyDownHandler = {
-			DispatchQueue(label: "windower", qos: .userInitiated).async {
-				WindowHelper.arrangeMedium?.executeAndReturnError(nil)
-			}
-		}
-        
-        arrangeMaxKey.keyDownHandler = {
-            DispatchQueue(label: "windower", qos: .userInitiated).async {
-                WindowHelper.arrangeMax?.executeAndReturnError(nil)
-            }
-        }
+//        arrangeSmallKey.keyDownHandler = {
+//			DispatchQueue(label: "windower", qos: .userInitiated).async {
+//				WindowHelper.arrangeSmall?.executeAndReturnError(nil)
+//			}
+//		}
+//		
+//        arrangeMediumKey.keyDownHandler = {
+//			DispatchQueue(label: "windower", qos: .userInitiated).async {
+//				WindowHelper.arrangeMedium?.executeAndReturnError(nil)
+//			}
+//		}
+//        
+//        arrangeMaxKey.keyDownHandler = {
+//            DispatchQueue(label: "windower", qos: .userInitiated).async {
+//                WindowHelper.arrangeMax?.executeAndReturnError(nil)
+//            }
+//        }
 //        
 //        arrangeFullKey.keyDownHandler = {
 //            DispatchQueue(label: "windower", qos: .userInitiated).async {
@@ -136,17 +136,17 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 //            }
 //        }
 		
-		arrangeLeftKey.keyDownHandler = {
-			DispatchQueue(label: "windower", qos: .userInitiated).async {
-				WindowHelper.arrangeLeft?.executeAndReturnError(nil)
-			}
-		}
-		
-		arrangeRightKey.keyDownHandler = {
-			DispatchQueue(label: "windower", qos: .userInitiated).async {
-				WindowHelper.arrangeRight?.executeAndReturnError(nil)
-			}
-		}
+//		arrangeLeftKey.keyDownHandler = {
+//			DispatchQueue(label: "windower", qos: .userInitiated).async {
+//				WindowHelper.arrangeLeft?.executeAndReturnError(nil)
+//			}
+//		}
+//		
+//		arrangeRightKey.keyDownHandler = {
+//			DispatchQueue(label: "windower", qos: .userInitiated).async {
+//				WindowHelper.arrangeRight?.executeAndReturnError(nil)
+//			}
+//		}
 		
 		// vera's
 //		clickableKey.keyDownHandler = {
@@ -185,6 +185,14 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 		notificationCenter.addObserver(forName: NSWorkspace.screensDidWakeNotification, object: nil, queue: nil, using: { _ in
 			wakeFromSleepFunc?()
 		})
+        notificationCenter.addObserver(forName: NSWorkspace.didHideApplicationNotification, object: nil, queue: nil, using: { boi in
+            guard let info = boi.userInfo?["NSWorkspaceApplicationKey"], let app = info as? NSRunningApplication else { return }
+            print("just hid!", app.bundleIdentifier)
+        })
+        notificationCenter.addObserver(forName: NSWorkspace.didUnhideApplicationNotification, object: nil, queue: nil, using: { boi in
+            guard let info = boi.userInfo?["NSWorkspaceApplicationKey"], let app = info as? NSRunningApplication else { return }
+            print("just unhid!", app.bundleIdentifier)
+        })
 		
 		return
 	}

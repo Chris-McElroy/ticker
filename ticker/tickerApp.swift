@@ -58,6 +58,7 @@ struct tickerApp: App {
 var hideWindow = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 100, height: 100), styleMask: [], backing: .buffered, defer: false)
 var currentScreen = NSRect(x: 0, y: 0, width: 1000, height: 1000)
 var wakeFromSleepFunc: (() -> Void)? = nil
+var spotifyEnabled: Bool = false
 
 func redrawWindows() {
     setBrightness()
@@ -185,13 +186,31 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 		notificationCenter.addObserver(forName: NSWorkspace.screensDidWakeNotification, object: nil, queue: nil, using: { _ in
 			wakeFromSleepFunc?()
 		})
-        notificationCenter.addObserver(forName: NSWorkspace.didHideApplicationNotification, object: nil, queue: nil, using: { boi in
+//        notificationCenter.addObserver(forName: NSWorkspace.didHideApplicationNotification, object: nil, queue: nil, using: { boi in
+//            guard let info = boi.userInfo?["NSWorkspaceApplicationKey"], let app = info as? NSRunningApplication else { return }
+//            print("just hid!", app.bundleIdentifier)
+//        })
+//        notificationCenter.addObserver(forName: NSWorkspace.didUnhideApplicationNotification, object: nil, queue: nil, using: { boi in
+//            guard let info = boi.userInfo?["NSWorkspaceApplicationKey"], let app = info as? NSRunningApplication else { return }
+//            print("just unhid!", app.bundleIdentifier)
+//        })
+        notificationCenter.addObserver(forName: NSWorkspace.didActivateApplicationNotification, object: nil, queue: nil, using: { boi in
             guard let info = boi.userInfo?["NSWorkspaceApplicationKey"], let app = info as? NSRunningApplication else { return }
-            print("just hid!", app.bundleIdentifier)
-        })
-        notificationCenter.addObserver(forName: NSWorkspace.didUnhideApplicationNotification, object: nil, queue: nil, using: { boi in
-            guard let info = boi.userInfo?["NSWorkspaceApplicationKey"], let app = info as? NSRunningApplication else { return }
-            print("just unhid!", app.bundleIdentifier)
+//            print("just activited!", app.bundleIdentifier)
+            if app.bundleIdentifier == "com.spotify.client" && !spotifyEnabled {
+                var repeats = 0
+                Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true, block: { t in
+//                    print("hiding from active", app.isFinishedLaunching)
+                    repeats += 1
+                    if repeats > 10 { t.invalidate(); return }
+                    if app.isHidden {
+//                        print("hidden from active")
+                        t.invalidate()
+                        return
+                    }
+                    app.hide()
+                })
+            }
         })
 		
 		return

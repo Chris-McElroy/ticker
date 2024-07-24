@@ -59,6 +59,7 @@ var hideWindow = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 100, height: 10
 var currentScreen = NSRect(x: 0, y: 0, width: 1000, height: 1000)
 var wakeFromSleepFunc: (() -> Void)? = nil
 var spotifyEnabled: Bool = false
+var anyTimer: Bool = false
 
 func redrawWindows() {
     setBrightness()
@@ -197,7 +198,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         notificationCenter.addObserver(forName: NSWorkspace.didActivateApplicationNotification, object: nil, queue: nil, using: { boi in
             guard let info = boi.userInfo?["NSWorkspaceApplicationKey"], let app = info as? NSRunningApplication else { return }
 //            print("just activited!", app.bundleIdentifier)
-            if app.bundleIdentifier == "com.spotify.client" && !spotifyEnabled {
+            let appID = app.bundleIdentifier
+            if (!anyTimer && appID != "com.apple.finder" && appID != "chris.ticker") || (app.bundleIdentifier == "com.spotify.client" && !spotifyEnabled) {
                 var repeats = 0
                 Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true, block: { t in
 //                    print("hiding from active", app.isFinishedLaunching)

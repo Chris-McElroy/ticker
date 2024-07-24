@@ -145,6 +145,7 @@ struct TickerView: View {
 		let hidingTicker = tickers.enumerated().first(where: { $0.element.flashing && !$0.element.name.contains("/") })
 		let flashingTicker = tickers.enumerated().first(where: { $0.element.flashing && $0.element.name.contains("/") })
         spotifyEnabled = tickers.contains(where: { $0.name.contains("3") && $0.wasNegative })
+        anyTimer = tickers.contains(where: { $0.name != "" && $0.name.allSatisfy({ "1234qwerasdfzxcv".contains($0) }) && $0.wasNegative })
 		
 		if let hidingTicker {
 			if !hiding {

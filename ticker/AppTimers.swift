@@ -18,7 +18,7 @@ func tryToHide(app: NSRunningApplication, launched: Bool = false) {
     app.hide()
     var repeats = 0
     Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true, block: { t in
-        if repeats == 0 && launched { app.activate(options: .activateAllWindows); app.unhide() }
+        if repeats == 0 && launched { app.activate(options: .activateAllWindows); app.unhide(); finderApp?.activate() }
 //        print("hiding!", app.bundleIdentifier ?? "", app.isHidden ? "hidden" : "visible", app.isActive ? "active" : "")
         guard !appAllowed(app) else { t.invalidate(); return }
         if repeats == 7 && app.isActive { print("redoing"); app.activate(options: .activateAllWindows); app.unhide(); finderApp?.activate() }
@@ -38,7 +38,7 @@ func appAllowed(_ app: NSRunningApplication) -> Bool {
         return true
     }
     // spotify rule
-    if appID == "com.spotify.client" && spotifyEnabled { return true }
+    if appID == "com.spotify.client" { return spotifyEnabled }
     // other app rule
     return anyTimer
 }
@@ -55,3 +55,5 @@ func appAllowed(_ app: NSRunningApplication) -> Bool {
 //        }
 //    })
 //}
+
+

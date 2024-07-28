@@ -50,12 +50,12 @@ struct TickerView: View {
 					if !showDays && isActive {
 						HStack(spacing: 0) {
 							Text(time.day).opacity(0.3)
-							Text(time.time.trimmingPrefix(time.day))
+							Text(time.time)
 						}
 						.background(.black.opacity(0.5))
 						.bold(true)
-					} else {
-						Text(time.time)
+                    } else {
+                        Text((showDays ? time.day : "") + time.time)
 							.italic(isActive)
 							.background(.black.opacity(0.5))
 					}
@@ -231,7 +231,7 @@ struct TickerView: View {
 	func keyDownFunc(event: NSEvent) {
 		if event.keyCode == 53 { // esc
 			if currentTicker?.offsetChange != nil {
-				currentTicker?.resetOffset()
+                currentTicker?.resetOffset(eq: false)
 			} else {
 				NSApplication.shared.hide(nil)
 				NSApplication.shared.unhideWithoutActivation()
@@ -291,14 +291,12 @@ struct TickerView: View {
 			} else if event.characters == "∂" {
 				selectedTicker = (tickers.count + selectedTicker - 1) % tickers.count
 				Storage.set(selectedTicker, for: .selected)
-			} else if event.characters == "®" {
+			} else if event.characters == "®" { // option r
 				if let currentTicker {
 					if currentTicker.offsetChange == nil {
 						currentTicker.offsetType = .zero
 						currentTicker.equivalentOffset = false
 						currentTicker.offsetChange = ""
-					} else {
-						currentTicker.equivalentOffset.toggle()
 					}
 				}
 			} else if event.characters == "3" {
@@ -315,28 +313,37 @@ struct TickerView: View {
 						currentTicker.offsetChange = ""
 					}
 				}
-			} else if event.characters == "£" {
+			} else if event.characters == "£" { // option 3
 				if let currentTicker {
 					currentTicker.offsetType = .pos
 					currentTicker.equivalentOffset = false
 					currentTicker.offsetChange = ""
 				}
-			} else if event.characters == "©" {
+			} else if event.characters == "©" { // option g
 				if currentTicker?.offsetChange != nil {
-					currentTicker?.resetOffset()
+                    currentTicker?.resetOffset(eq: false)
 				}
 			} else if event.characters == "r" {
-				if let currentTicker {
-					let newTicker = currentTicker
-                    guard let start = newTicker.start else { return }
-                    var time = Date().timeIntervalSince(start) + newTicker.offset
-                    if time >= 0 { time += 900 }
-                    let change = Int(time/900)*15
-                    newTicker.offsetType = .neg
-                    newTicker.equivalentOffset = false
-                    newTicker.offsetChange = showSeconds ? "\(change).0" : "\(change)"
-                    setCurrentTicker(newTicker.offsetResolved())
-				}
+                if let currentTicker {
+                    if currentTicker.offsetChange == nil {
+                        currentTicker.offsetType = .zero
+                        currentTicker.equivalentOffset = true
+                        currentTicker.offsetChange = ""
+                    } else {
+                        currentTicker.equivalentOffset.toggle()
+                    }
+                }
+//				if let currentTicker {
+//					let newTicker = currentTicker
+//                    guard let start = newTicker.start else { return }
+//                    var time = Date().timeIntervalSince(start) + newTicker.offset
+//                    if time >= 0 { time += 900 }
+//                    let change = Int(time/900)*15
+//                    newTicker.offsetType = .neg
+//                    newTicker.equivalentOffset = false
+//                    newTicker.offsetChange = showSeconds ? "\(change).0" : "\(change)"
+//                    setCurrentTicker(newTicker.offsetResolved())
+//				}
 			}
 			
 			updater.toggle()
@@ -413,7 +420,8 @@ func getCurrentTime(withDay: Bool = false) -> (day: String, time: String) {
 	let hours = comp.hour ?? 0
 	let weekday = ["x", "u", "m", "t", "w", "r", "f", "s"][comp.weekday ?? 0]
 //	let hours = ((comp.hour ?? 0) + 11) % 12 + 1 // vera's
-	return (weekday + ":" + String(comp.day ?? 0) + ".", (showDays ? weekday + ":" : (withDay ? "" : ",")) + tickerString(neg: false, days: showDays ? comp.day ?? 0 : 0, hours: hours, minutes: comp.minute ?? 0, seconds: comp.second ?? 0))
+	return (weekday + ":" + String(comp.day ?? 0) + ".", tickerString(neg: false, days: 0, hours: hours, minutes: comp.minute ?? 0, seconds: comp.second ?? 0))
+//    return (weekday + ":" + String(comp.day ?? 0) + ".", (showDays ? weekday + ":" : (withDay ? "" : ",")) + tickerString(neg: false, days: showDays ? comp.day ?? 0 : 0, hours: hours, minutes: comp.minute ?? 0, seconds: comp.second ?? 0))
 	
 	// from base 10
 	// let fraction = ((comp.minute ?? 0)*60 + (comp.second ?? 0))/36

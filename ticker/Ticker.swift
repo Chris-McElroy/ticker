@@ -67,7 +67,7 @@ class Ticker {
 		
 		if let offsetChange {
 			if equivalentOffset {
-				fullString += " " + offsetType.rawValue + " " + getCurrentTime().time + " " + offsetType.eqString() + " " + offsetChange
+                fullString += " " + offsetType.rawValue + " " + getCurrentTime(withDay: false).time + " " + offsetType.eqString() + " " + offsetChange
 			} else {
 				fullString += " " + offsetType.rawValue + " " + offsetChange
 			}
@@ -152,10 +152,10 @@ class Ticker {
 					  visible: ((offsetType == .zero && start == nil) ? true : visible))
 	}
 	
-	func resetOffset() {
+    func resetOffset(eq: Bool) {
 		offsetChange = nil
 		offsetType = .pos
-		equivalentOffset = false
+		equivalentOffset = eq
 	}
 	
 	func activityToggled() -> Ticker {

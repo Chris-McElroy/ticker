@@ -78,17 +78,18 @@ func setBrightness() {
 
 class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 //	var statusBar: StatusBarController?
-//	let activationKey = HotKey(key: .z, modifiers: [.control])
+	let activationKey = HotKey(key: .e, modifiers: [.option])
+    let quitKey = HotKey(key: .quote, modifiers: [.control])
 	// vera's keys:
 //	let activationKey = HotKey(key: .z, modifiers: [.command, .option])
 //	let clickableKey = HotKey(key: .a, modifiers: [.option, .shift])
 	
-    let arrangeSmallKey = HotKey(key: .q, modifiers: [.command, .option])
-	let arrangeMediumKey = HotKey(key: .a, modifiers: [.command, .option])
-	let arrangeMaxKey = HotKey(key: .z, modifiers: [.command, .option])
+//    let arrangeSmallKey = HotKey(key: .q, modifiers: [.command, .option])
+//	let arrangeMediumKey = HotKey(key: .a, modifiers: [.command, .option])
+//	let arrangeMaxKey = HotKey(key: .z, modifiers: [.command, .option])
 //    let arrangeFullKey = HotKey(key: .return, modifiers: [.command, .option])
-    let arrangeLeftKey = HotKey(key: .one, modifiers: [.command])
-    let arrangeRightKey = HotKey(key: .two, modifiers: [.command])
+//    let arrangeLeftKey = HotKey(key: .one, modifiers: [.command])
+//    let arrangeRightKey = HotKey(key: .two, modifiers: [.command])
     
     
 //    let arrangeSmallerKey = HotKey(key: .downArrow, modifiers: [.command, .option])
@@ -108,9 +109,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 		redrawWindows()
 //		WindowHelper.refreshScripts()
 		
-//		activationKey.keyDownHandler = {
-//			NSApplication.shared.activate(ignoringOtherApps: true)
-//		}
+		activationKey.keyDownHandler = {
+			NSApplication.shared.activate(ignoringOtherApps: true)
+		}
+        
+        quitKey.keyDownHandler = {
+            NSApp.terminate(nil)
+        }
 		
 //        arrangeSmallKey.keyDownHandler = {
 //			DispatchQueue(label: "windower", qos: .userInitiated).async {
@@ -185,16 +190,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 		notificationCenter.addObserver(forName: NSWorkspace.screensDidWakeNotification, object: nil, queue: nil, using: { _ in
 			wakeFromSleepFunc?()
 		})
-//        notificationCenter.addObserver(forName: NSWorkspace.didHideApplicationNotification, object: nil, queue: nil, using: { boi in
-//            guard let info = boi.userInfo?["NSWorkspaceApplicationKey"], let app = info as? NSRunningApplication else { return }
-//            print("just hid!", app.bundleIdentifier)
-//        })
-//        notificationCenter.addObserver(forName: NSWorkspace.didUnhideApplicationNotification, object: nil, queue: nil, using: { boi in
-//            guard let info = boi.userInfo?["NSWorkspaceApplicationKey"], let app = info as? NSRunningApplication else { return }
-//            print("just unhid!", app.bundleIdentifier)
-//        })
         
-//        startHideTimer()
         notificationCenter.addObserver(forName: NSWorkspace.didActivateApplicationNotification, object: nil, queue: nil, using: { boi in
             guard let info = boi.userInfo?["NSWorkspaceApplicationKey"], let app = info as? NSRunningApplication else { return }
 //            print("just activited!", app.bundleIdentifier, app.isHidden)
@@ -207,9 +203,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         })
         notificationCenter.addObserver(forName: NSWorkspace.didLaunchApplicationNotification, object: nil, queue: nil, using: { boi in
             guard let info = boi.userInfo?["NSWorkspaceApplicationKey"], let app = info as? NSRunningApplication else { return }
-//            print("just launched!", app.bundleIdentifier, app.isHidden)
+            print("just launched!", app.bundleIdentifier ?? "", app.isHidden)
             tryToHide(app: app, launched: true)
         })
+        
+        print(notificationCenter.debugDescription)
 		
 		return
 	}

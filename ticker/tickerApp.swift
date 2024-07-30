@@ -191,24 +191,30 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 			wakeFromSleepFunc?()
 		})
         
-        notificationCenter.addObserver(forName: NSWorkspace.didActivateApplicationNotification, object: nil, queue: nil, using: { boi in
-            guard let info = boi.userInfo?["NSWorkspaceApplicationKey"], let app = info as? NSRunningApplication else { return }
-//            print("just activited!", app.bundleIdentifier, app.isHidden)
-            tryToHide(app: app)
+        // hiding and unhiding
+        notificationCenter.addObserver(forName: NSWorkspace.didHideApplicationNotification, object: nil, queue: nil, using: {
+            AppTimers.handleAppChange(for: $0)
         })
-        notificationCenter.addObserver(forName: NSWorkspace.willLaunchApplicationNotification, object: nil, queue: nil, using: { boi in
-            guard let info = boi.userInfo?["NSWorkspaceApplicationKey"], let app = info as? NSRunningApplication else { return }
-//            print("will launch!", app.bundleIdentifier, app.isHidden)
-            tryToHide(app: app)
-        })
-        notificationCenter.addObserver(forName: NSWorkspace.didLaunchApplicationNotification, object: nil, queue: nil, using: { boi in
-            guard let info = boi.userInfo?["NSWorkspaceApplicationKey"], let app = info as? NSRunningApplication else { return }
-            print("just launched!", app.bundleIdentifier ?? "", app.isHidden)
-            tryToHide(app: app, launched: true)
+        notificationCenter.addObserver(forName: NSWorkspace.didUnhideApplicationNotification, object: nil, queue: nil, using: {
+            AppTimers.handleAppChange(for: $0)
         })
         
-        print(notificationCenter.debugDescription)
-		
+        // activating and deactivating
+        notificationCenter.addObserver(forName: NSWorkspace.didActivateApplicationNotification, object: nil, queue: nil, using: {
+            AppTimers.handleAppChange(for: $0)
+        })
+        notificationCenter.addObserver(forName: NSWorkspace.didDeactivateApplicationNotification, object: nil, queue: nil, using: {
+            AppTimers.handleAppChange(for: $0)
+        })
+        
+        // launching
+        notificationCenter.addObserver(forName: NSWorkspace.willLaunchApplicationNotification, object: nil, queue: nil, using: {
+            AppTimers.handleAppChange(for: $0)
+        })
+        notificationCenter.addObserver(forName: NSWorkspace.didLaunchApplicationNotification, object: nil, queue: nil, using: {
+            AppTimers.handleAppChange(for: $0)
+        })
+        
 		return
 	}
 	

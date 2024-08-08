@@ -35,17 +35,17 @@ class AppTimers {
     
     static func appAllowed(_ app: NSRunningApplication) -> Bool {
         // for testing
-        if app.id == apps.xcode.id { return true }
+//        if app.id == apps.xcode.id { return true }
         // avoiding hide fighting
         if app.id == apps.finder.id || app.id == apps.ticker.id {
-            if app.id == apps.finder.id { allApps[apps.finder.id] = AppInfo(app) }
+            if app.id == apps.finder.id { allApps[apps.finder.id] = AppInfo(app) } // TODO remove
             return true
         }
         // background apps
         if app.id == apps.endel.id { return true }
         // main app rules
         if app.id == apps.spotify.id { return enabledList["3", default: false] }
-        if app.id == apps.texts.id || app.id == apps.signal.id || app.id == apps.imessage.id { return enabledList["s", default: false] }
+        if app.id == apps.texts.id || app.id == apps.signal.id || app.id == apps.imessage.id { return enabledList["a", default: false] }
         if app.id == apps.mail.id { return enabledList["v", default: false] }
         if app.id == apps.safari.id { return enabledList["w", default: false] }
         if app.id == apps.xcode.id { return enabledList["x", default: false] }
@@ -70,6 +70,8 @@ class AppTimers {
                 app.fixAttemps = nil
                 continue
             }
+            // TODO use app.main.ownsMenuBar that's so much better
+            // and see if i can find a way to get apps to unfullscreen themselves if they do
             if app.main.isTerminated || app.main.isHidden {
                 print("fixed 2", id, app.main.isTerminated, app.main.isHidden, app.main.isActive)
                 app.fixAttemps = nil

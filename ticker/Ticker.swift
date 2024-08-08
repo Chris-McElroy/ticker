@@ -117,6 +117,9 @@ class Ticker {
 		
 		let negative = offsetChange.first == "-"
 		if negative { offsetChange.removeFirst() }
+        
+        let minEq = offsetChange.first == ";" && equivalentOffset
+        if minEq { offsetChange.removeFirst() }
 		
 		var offsetComp: [Double] = []
 		for nString in offsetChange.split(separator: ".") {
@@ -143,6 +146,10 @@ class Ticker {
 			eqAmt += Double(60*(comp.minute ?? 0))
 			eqAmt += Double(comp.second ?? 0)
 			eqAmt += Double((comp.nanosecond ?? 0))/1000000000
+            
+            if minEq {
+                newOffset += Double(3600*(comp.hour ?? 0))
+            }
 			
 			newOffset = eqAmt - newOffset
 		}

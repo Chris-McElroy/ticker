@@ -398,7 +398,7 @@ struct TickerView: View {
 		} else if event.specialKey == nil {
 			guard (blockTime ?? .now) <= .now else { return }
 			if currentTicker.offsetChange != nil {
-				for c in (event.characters ?? "").filter({ "0123456789.-".contains($0) }) {
+				for c in (event.characters ?? "").filter({ "0123456789.-;".contains($0) }) {
 					currentTicker.offsetChange?.append(c)
 				}
 			} else {
@@ -419,7 +419,7 @@ func getCurrentTime(withDay: Bool = false) -> (day: String, time: String) {
 	let hours = comp.hour ?? 0
 	let weekday = ["x", "u", "m", "t", "w", "r", "f", "s"][comp.weekday ?? 0]
 //	let hours = ((comp.hour ?? 0) + 11) % 12 + 1 // vera's
-	return (weekday + ":" + String(comp.day ?? 0) + ".", tickerString(neg: false, days: 0, hours: hours, minutes: comp.minute ?? 0, seconds: comp.second ?? 0))
+    return (weekday + ":" + String(comp.day ?? 0) + ".", (hours == 0 ? "0." : "") + tickerString(neg: false, days: 0, hours: hours, minutes: comp.minute ?? 0, seconds: comp.second ?? 0))
 //    return (weekday + ":" + String(comp.day ?? 0) + ".", (showDays ? weekday + ":" : (withDay ? "" : ",")) + tickerString(neg: false, days: showDays ? comp.day ?? 0 : 0, hours: hours, minutes: comp.minute ?? 0, seconds: comp.second ?? 0))
 	
 	// from base 10

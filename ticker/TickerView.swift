@@ -245,7 +245,10 @@ struct TickerView: View {
 					setCurrentTicker(currentTicker.activityToggled())
 				}
 			} else if event.characters == "e" {
-				setTickers([Ticker()] + tickers)
+                let newTicker = Ticker()
+                newTicker.offsetChange = ""
+                newTicker.offsetType = .neg
+                setTickers([newTicker] + tickers)
 				selectedTicker = 0
 				Storage.set(selectedTicker, for: .selected)
 			} else if event.characters == "v" {
@@ -324,13 +327,8 @@ struct TickerView: View {
 				}
 			} else if event.characters == "r" {
                 if let currentTicker {
-                    if currentTicker.offsetChange == nil {
-                        currentTicker.offsetType = .zero
-                        currentTicker.equivalentOffset = true
-                        currentTicker.offsetChange = ""
-                    } else {
-                        currentTicker.equivalentOffset.toggle()
-                    }
+                    currentTicker.offsetType = .zero
+                    currentTicker.equivalentOffset = true
                 }
 //				if let currentTicker {
 //					let newTicker = currentTicker
@@ -372,6 +370,10 @@ struct TickerView: View {
 			selectedTicker = min(tickers.count - 1, selectedTicker + 1)
 			Storage.set(selectedTicker, for: .selected)
 		} else if event.specialKey == .tab {
+            if currentTicker.offsetChange != nil {
+                setCurrentTicker(currentTicker.offsetResolved())
+                return
+            }
 			selectedTicker = (selectedTicker + 1) % tickers.count
 			Storage.set(selectedTicker, for: .selected)
 		} else if event.specialKey == .backTab {

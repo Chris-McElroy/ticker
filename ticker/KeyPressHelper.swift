@@ -13,18 +13,24 @@ var reattachKeyPress: () -> Void = {}
 struct KeyPressHelper: NSViewRepresentable {
 	let view: KeyView = KeyView()
 	
-	init(_ keyDownFunc: @escaping (NSEvent) -> Void) {
+	init(_ keyDownFunc: @escaping (NSEvent) -> Void, _ keyUpFunc: @escaping (NSEvent) -> Void) {
 		view.keyDownFunc = keyDownFunc
+        view.keyUpFunc = keyUpFunc
 	}
 	
 	class KeyView: NSView {
 		var keyDownFunc: (NSEvent) -> Void = { _ in }
+        var keyUpFunc: (NSEvent) -> Void = { _ in }
 		
 		override var acceptsFirstResponder: Bool { true }
 		
 		override func keyDown(with event: NSEvent) {
 			keyDownFunc(event)
 		}
+        
+        override func keyUp(with event: NSEvent) {
+            keyUpFunc(event)
+        }
 	}
 
 	func makeNSView(context: Context) -> NSView {

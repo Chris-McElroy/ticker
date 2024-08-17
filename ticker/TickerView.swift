@@ -26,6 +26,7 @@ struct TickerView: View {
 	@State var blockTime: Date? = nil
 	@State var hiding: Bool = false
 	@State var flashing: Bool = false
+    @State var tabDown: String? = nil
 //	@State var nextCheckin: Date? = nil
 	@State var activeCountdowns = 2
 //	@State var remainingPower: Int = getRemainingPower()
@@ -96,7 +97,7 @@ struct TickerView: View {
 			selectedTicker = tickers.firstIndex(where: { $0 === lastCurrentTicker }) ?? selectedTicker
 			Storage.set(selectedTicker, for: .selected)
 		}
-		.background(KeyPressHelper(keyDownFunc))
+        .background(KeyPressHelper(keyDownFunc, keyUpFunc))
 		.onAppear {
 			Timer.scheduledTimer(withTimeInterval: 0.2, repeats: true, block: { _ in
 				updater.toggle()
@@ -239,16 +240,20 @@ struct TickerView: View {
 			updater.toggle()
 		}
 		
-		if event.modifierFlags.contains(.command) {
+        if event.specialKey == .tab {
+            if tabDown == nil { tabDown = "" }
+        } else if let tabDown, event.characters != "" {
+            self.tabDown = tabDown + (event.characters ?? "")
+            return
+        }
+        
+        if event.modifierFlags.contains(.command) {
 			if event.characters == "s" { // vera may want to change this back to space, along with other changes
 				if let currentTicker {
 					setCurrentTicker(currentTicker.activityToggled())
 				}
 			} else if event.characters == "e" {
-                let newTicker = Ticker()
-                newTicker.offsetChange = ""
-                newTicker.offsetType = .neg
-                setTickers([newTicker] + tickers)
+                setTickers([Ticker()] + tickers)
 				selectedTicker = 0
 				Storage.set(selectedTicker, for: .selected)
 			} else if event.characters == "v" {
@@ -374,11 +379,11 @@ struct TickerView: View {
                 setCurrentTicker(currentTicker.offsetResolved())
                 return
             }
-			selectedTicker = (selectedTicker + 1) % tickers.count
-			Storage.set(selectedTicker, for: .selected)
+//			selectedTicker = (selectedTicker + 1) % tickers.count
+//			Storage.set(selectedTicker, for: .selected)
 		} else if event.specialKey == .backTab {
-			selectedTicker = (tickers.count + selectedTicker - 1) % tickers.count
-			Storage.set(selectedTicker, for: .selected)
+//			selectedTicker = (tickers.count + selectedTicker - 1) % tickers.count
+//			Storage.set(selectedTicker, for: .selected)
 		} else if event.specialKey == .delete {
 			guard (blockTime ?? .now) <= .now else { return }
 			if currentTicker.offsetChange != nil {
@@ -410,6 +415,21 @@ struct TickerView: View {
 		
 		updater.toggle()
 	}
+    
+    func keyUpFunc(event: NSEvent) {
+        if event.specialKey == .tab {
+            if let tabDown, tabDown != "" {
+                let newTicker = Ticker()
+                newTicker.name = tabDown
+                newTicker.offsetChange = ""
+                newTicker.offsetType = .neg
+                setTickers([newTicker] + tickers)
+                selectedTicker = 0
+                Storage.set(selectedTicker, for: .selected)
+                self.tabDown = nil
+            }
+        }
+    }
 	
 	func storeTickers() {
 		Storage.set(tickers.map { $0.toDict() }, for: .tickers)

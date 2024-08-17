@@ -9,23 +9,24 @@ import SwiftUI
 
 class AppTimers {
     static var anyAppsEnabled: Bool = false
-    static var enabledList: [Character: Bool] = [:]
+    static var enabledList: Set<Character> = []
     static var allApps: [String: AppInfo] = [:]
     
     static func handleAppChange(for notification: Notification) {
-        guard let info = notification.userInfo?["NSWorkspaceApplicationKey"], let app = info as? NSRunningApplication else { return }
+        guard let info = notification.userInfo?["NSWorkspaceApplicationKey"], let apphandle = info as? NSRunningApplication else { return }
         // add to list of apps
-        if allApps[app.id] == nil { allApps[app.id] = AppInfo(app) }
+        let app = AppInfo(apphandle)
+        if allApps[app.id] == nil { allApps[app.id] = app }
         // check if allowed
         guard !appAllowed(app) else { return }
         // check if hidden
-        if app.isTerminated || app.isHidden {
-            print("fixed", app.id, app.isTerminated, app.isHidden, app.isActive)
+        if app.main.isTerminated || app.main.isHidden {
+            print("fixed", app.id, app.main.isTerminated, app.main.isHidden, app.main.isActive)
             allApps[app.id]?.fixAttemps = nil
             return
         }
         // try to hide
-        app.hide()
+        app.main.hide()
         // start tracking for later
         if allApps[app.id]?.fixAttemps == nil {
             allApps[app.id]?.fixAttemps = 0
@@ -33,41 +34,44 @@ class AppTimers {
         print("trying to hide", app.id)
     }
     
-    static func appAllowed(_ app: NSRunningApplication) -> Bool {
+    static func appAllowed(_ app: AppInfo) -> Bool {
+        // everything allowed while ticker is front
+        if allApps[apps.ticker.id]?.main.isActive ?? false { return true }
+        
         // for testing
 //        if app.id == apps.xcode.id { return true }
         // avoiding hide fighting
         if app.id == apps.finder.id || app.id == apps.ticker.id {
-            if app.id == apps.finder.id { allApps[apps.finder.id] = AppInfo(app) } // TODO remove
             return true
         }
-        // background apps
-        if app.id == apps.endel.id { return true }
         // main app rules
-        if app.id == apps.spotify.id { return enabledList["3", default: false] }
-        if app.id == apps.texts.id || app.id == apps.signal.id || app.id == apps.imessage.id { return enabledList["a", default: false] }
-        if app.id == apps.mail.id { return enabledList["v", default: false] }
-        if app.id == apps.safari.id { return enabledList["w", default: false] }
-        if app.id == apps.xcode.id { return enabledList["x", default: false] }
-        if [apps.zotero.id, apps.word.id, apps.excel.id, apps.teams.id].contains(app.id) { return enabledList["c", default: false] }
+        if let key = app.key {
+            return enabledList.contains(key)
+        }
         // other app rule
         return anyAppsEnabled
     }
 
     static func updateAppTimers(with tickers: [Ticker]) {
         // update which apps are enabled
-        let charList = "1234qwerasdfzxcv"
-        let appTimerTickers: [Ticker] = tickers.filter { $0.name != "" && $0.name.allSatisfy({ charList.contains($0) }) && $0.wasNegative }
+        let charList = "1234qwerasdfgzxcv "
+        let appTimerTickers: [Ticker] = tickers.filter { $0.name.drop(while: { $0 == " " }) != "" && $0.name.allSatisfy({ charList.contains($0) }) && ($0.wasNegative || $0.flashing) }
         anyAppsEnabled = !appTimerTickers.isEmpty
-        for char in charList {
-            enabledList[char] = appTimerTickers.contains { $0.name.contains(char) }
-        }
+        let newEnabledList: Set<Character> = Set(appTimerTickers.flatMap({ $0.name }))
+        let checkAllApps = newEnabledList == enabledList
+        enabledList = newEnabledList
         
         // check current apps
         for (id, app) in allApps {
-            guard let fixAttempts = app.fixAttemps else { continue }
-            if appAllowed(app.main) {
+            if !checkAllApps {
+                guard app.fixAttemps != nil else { continue }
+            }
+            if appAllowed(app) {
                 app.fixAttemps = nil
+                continue
+            } else if app.fixAttemps == nil {
+                app.main.hide()
+                app.fixAttemps = 0
                 continue
             }
             // TODO use app.main.ownsMenuBar that's so much better
@@ -77,19 +81,19 @@ class AppTimers {
                 app.fixAttemps = nil
                 continue
             }
-            if fixAttempts == 6 {
+            if app.fixAttemps == 6 {
                 allApps[apps.finder.id]?.main.activate()
             }
             
-            if fixAttempts == 10 {
+            if app.fixAttemps == 10 {
                 app.main.unhide()
                 app.main.activate(options: .activateAllWindows)
                 allApps[apps.finder.id]?.main.activate()
             }
-            if fixAttempts == 30 {
+            if app.fixAttemps == 30 {
                 app.main.terminate()
             }
-            app.fixAttemps = fixAttempts + 1
+            app.fixAttemps = (app.fixAttemps ?? -1) + 1
         }
     }
 
@@ -108,16 +112,57 @@ class AppTimers {
         case excel = "com.microsoft.Excel"
         case teams = "com.microsoft.teams2"
         case endel = "com.endel.endel"
+        case music = "com.apple.Music"
+        case orion = "com.kagi.kagimacOS"
+        case arc = "company.thebrowser.Browser"
+        case chrome = "com.google.Chrome"
+        case firefox = "org.mozilla.firefox"
+        case whatsapp = "net.whatsapp.WhatsApp"
+        case settings = "com.apple.systempreferences"
+        case alfred = "com.runningwithcrayons.Alfred-Preferences"
+        case shortcuts = "com.apple.shortcuts"
+        case shortery = "com.shortery-app.Shortery"
+        case tinkertool = "com.bresink.system.tinkertool"
+        case btt = "com.hegenberg.BetterTouchTool"
+        case karabiner = "org.pqrs.Karabiner-Elements.Settings"
+        case cubetimer = "org.cubesense.cubesenseapp"
+        case vscode = "com.microsoft.VSCode"
+        case rstudio = "com.rstudio.desktop"
+        case warp = "dev.warp.Warp-Stable"
+        case sublime = "com.sublimetext.4"
+        case powerpoint = "com.microsoft.Powerpoint"
+        case outlook = "com.microsoft.Outlook"
+        case pdfreader = "com.pspdfkit.viewer"
+        case books = "com.apple.iBooksX"
         
         var id: String { rawValue }
+        
+        func key() -> Character? {
+            switch self {
+            case .spotify, .music: return "3"
+            case .pdfreader, .books: return "4"
+            case .safari, .orion, .arc, .chrome, .firefox: return "w"
+            case .texts, .signal, .imessage, .whatsapp: return "a"
+            case .settings, .alfred, .shortcuts, .shortery, .tinkertool, .btt, .karabiner: return "g"
+            case .cubetimer: return "z"
+            case .xcode, .vscode, .rstudio, .warp, .sublime: return "x"
+            case .zotero, .word, .excel, .teams, .powerpoint: return "c"
+            case .mail, .outlook: return "v"
+            default: return nil
+            }
+        }
     }
 
     class AppInfo {
         var main: NSRunningApplication
         var fixAttemps: Int? = nil
+        let id: String
+        let key: Character?
         
         init(_ main: NSRunningApplication) {
             self.main = main
+            self.id = main.id
+            self.key = apps(rawValue: main.id)?.key()
         }
     }
 

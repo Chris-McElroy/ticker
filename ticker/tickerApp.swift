@@ -232,7 +232,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 		window.isMovableByWindowBackground = true
 		window.collectionBehavior = .canJoinAllSpaces
 		window.titlebarSeparatorStyle = .none
-//		window.ignoresMouseEvents = true // comment this out for clickability (vera's)
+		window.ignoresMouseEvents = true // comment this out for clickability (vera's)
 		window.delegate = self
 	}
 	

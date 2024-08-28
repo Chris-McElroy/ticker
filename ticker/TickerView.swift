@@ -334,6 +334,9 @@ struct TickerView: View {
                 if let currentTicker {
                     currentTicker.offsetType = .zero
                     currentTicker.equivalentOffset = true
+                    if currentTicker.offsetChange == nil {
+                        currentTicker.offsetChange = ""
+                    }
                 }
 //				if let currentTicker {
 //					let newTicker = currentTicker

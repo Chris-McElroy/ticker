@@ -13,6 +13,7 @@ var showDays: Bool = Storage.bool(.showDays)
 var showTotals: Bool = false
 //var checkinThreshold: Double = 2520
 var lastAc = 0
+var warning = false
 
 // Load framework
 let bundle = CFBundleCreate(kCFAllocatorDefault, NSURL(fileURLWithPath: "/System/Library/PrivateFrameworks/MediaRemote.framework"))
@@ -143,8 +144,9 @@ struct TickerView: View {
 	}
 	
 	func monitorTickers() {
-		let hidingTicker = tickers.enumerated().first(where: { $0.element.flashing && !$0.element.name.contains("/") })
-		let flashingTicker = tickers.enumerated().first(where: { $0.element.flashing && $0.element.name.contains("/") })
+		let hidingTicker = tickers.enumerated().first(where: { $0.element.flashing && !$0.element.name.contains("\\") })
+		let flashingTicker = tickers.enumerated().first(where: { $0.element.flashing && $0.element.name.contains("\\") })
+        warning = tickers.enumerated().contains(where: { $0.element.nearlyFlashing })
         AppTimers.updateAppTimers(with: tickers)
 		
 		if let hidingTicker {
@@ -183,6 +185,8 @@ struct TickerView: View {
 		} else {
 			flashing = false
 		}
+        
+        handleWarningUpdate()
 		
 //		if let nextCheckin, nextCheckin <= .now {
 //			// assumed to not be active bc it's reset when it's active

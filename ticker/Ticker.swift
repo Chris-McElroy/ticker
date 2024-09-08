@@ -31,6 +31,7 @@ class Ticker {
 	var visible: Bool = true
 	var flashing: Bool = false
 	var wasNegative: Bool = false
+    var nearlyFlashing: Bool = false
 //	var validCountdown: Bool = true
 	
 	init() {
@@ -96,6 +97,8 @@ class Ticker {
 			if flashing && (posTime*2).truncatingRemainder(dividingBy: 2) < 1 {
 				return " "
 			}
+            
+            nearlyFlashing = time < 0 && time > -15
 		}
 		
 		let seconds = Int(posTime.rounded(.down)) % 60

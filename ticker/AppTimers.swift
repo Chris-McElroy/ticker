@@ -14,6 +14,7 @@ class AppTimers {
     
     static func handleAppChange(for notification: Notification) {
         guard let info = notification.userInfo?["NSWorkspaceApplicationKey"], let apphandle = info as? NSRunningApplication else { return }
+        handleWarningUpdate()
         // add to list of apps
         let app = AppInfo(apphandle)
         if allApps[app.id] == nil { allApps[app.id] = app }

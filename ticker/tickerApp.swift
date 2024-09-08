@@ -56,6 +56,7 @@ struct tickerApp: App {
 //}
 
 var hideWindow = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 100, height: 100), styleMask: [], backing: .buffered, defer: false)
+var warningWindow = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 100, height: 100), styleMask: [], backing: .buffered, defer: false)
 var currentScreen = NSRect(x: 0, y: 0, width: 1000, height: 1000)
 var wakeFromSleepFunc: (() -> Void)? = nil
 
@@ -64,9 +65,20 @@ func redrawWindows() {
     
 	guard let screenSize = NSScreen.main?.frame else { return }
 	hideWindow.setFrame(NSRect(x: 0, y: 0, width: screenSize.width, height: screenSize.height), display: false)
+    warningWindow.setFrame(NSRect(x: 0, y: 0, width: screenSize.width, height: screenSize.height), display: false)
 	
 	guard let window = NSApplication.shared.windows.first(where: { $0.identifier?.rawValue == "main-AppWindow-1" }) else { return }
 	window.setFrameOrigin(NSPoint(x: screenSize.width - 500, y: 0))
+}
+
+func handleWarningUpdate() {
+    if warning {
+        if !warningWindow.isVisible { warningWindow.setIsVisible(true) }
+//        warningWindow.makeKeyAndOrderFront(nil)
+//        warningWindow.orderFront(nil)
+    } else {
+        warningWindow.close()
+    }
 }
 
 func setBrightness() {
@@ -106,6 +118,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 		
 		hideWindow.isReleasedWhenClosed = false
 		hideWindow.backgroundColor = NSColor.black
+        warningWindow.isReleasedWhenClosed = false
+        warningWindow.ignoresMouseEvents = true
+        warningWindow.level = .screenSaver
+        warningWindow.backgroundColor = NSColor.magenta.withAlphaComponent(0.2)
 		redrawWindows()
 //		WindowHelper.refreshScripts()
 		

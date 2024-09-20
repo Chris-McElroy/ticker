@@ -58,7 +58,7 @@ struct tickerApp: App {
 var hideWindow = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 100, height: 100), styleMask: [], backing: .buffered, defer: false)
 var warningWindow = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 100, height: 100), styleMask: [], backing: .buffered, defer: false)
 var currentScreen = NSRect(x: 0, y: 0, width: 1000, height: 1000)
-var wakeFromSleepFunc: (() -> Void)? = nil
+//var wakeFromSleepFunc: (() -> Void)? = nil
 
 func redrawWindows() {
     setBrightness()
@@ -75,7 +75,7 @@ func handleWarningUpdate() {
     if warning {
         if !warningWindow.isVisible { warningWindow.setIsVisible(true) }
 //        warningWindow.makeKeyAndOrderFront(nil)
-//        warningWindow.orderFront(nil)
+//        warningWindow.o´rderFront(nil)
     } else {
         warningWindow.close()
     }
@@ -202,52 +202,53 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 		// Initialising the status bar
 //		statusBar = StatusBarController.main
 		
-		let notificationCenter = NSWorkspace.shared.notificationCenter
-		notificationCenter.addObserver(forName: NSWorkspace.screensDidWakeNotification, object: nil, queue: nil, using: { _ in
-			wakeFromSleepFunc?()
-		})
+//		let notificationCenter = NSWorkspace.shared.notificationCenter
+//		notificationCenter.addObserver(forName: NSWorkspace.screensDidWakeNotification, object: nil, queue: nil, using: { _ in
+//			wakeFromSleepFunc?()
+//		})
         
         // hiding and unhiding
-        notificationCenter.addObserver(forName: NSWorkspace.didHideApplicationNotification, object: nil, queue: nil, using: {
-            AppTimers.handleAppChange(for: $0)
-        })
-        notificationCenter.addObserver(forName: NSWorkspace.didUnhideApplicationNotification, object: nil, queue: nil, using: {
-            AppTimers.handleAppChange(for: $0)
-        })
+//        notificationCenter.addObserver(forName: NSWorkspace.didHideApplicationNotification, object: nil, queue: nil, using: {
+//            AppTimers.handleAppChange(for: $0)
+//        })
+//        notificationCenter.addObserver(forName: NSWorkspace.didUnhideApplicationNotification, object: nil, queue: nil, using: {
+//            AppTimers.handleAppChange(for: $0)
+//        })
         
         // activating and deactivating
-        notificationCenter.addObserver(forName: NSWorkspace.didActivateApplicationNotification, object: nil, queue: nil, using: {
-            AppTimers.handleAppChange(for: $0)
-        })
-        notificationCenter.addObserver(forName: NSWorkspace.didDeactivateApplicationNotification, object: nil, queue: nil, using: {
-            AppTimers.handleAppChange(for: $0)
-        })
+//        notificationCenter.addObserver(forName: NSWorkspace.didActivateApplicationNotification, object: nil, queue: nil, using: {
+//            AppTimers.handleAppChange(for: $0)
+//        })
+//        notificationCenter.addObserver(forName: NSWorkspace.didDeactivateApplicationNotification, object: nil, queue: nil, using: {
+//            AppTimers.handleAppChange(for: $0)
+//        })
         
         // launching
-        notificationCenter.addObserver(forName: NSWorkspace.willLaunchApplicationNotification, object: nil, queue: nil, using: {
-            AppTimers.handleAppChange(for: $0)
-        })
-        notificationCenter.addObserver(forName: NSWorkspace.didLaunchApplicationNotification, object: nil, queue: nil, using: {
-            AppTimers.handleAppChange(for: $0)
-        })
+//        notificationCenter.addObserver(forName: NSWorkspace.willLaunchApplicationNotification, object: nil, queue: nil, using: {
+//            AppTimers.handleAppChange(for: $0)
+//        })
+//        notificationCenter.addObserver(forName: NSWorkspace.didLaunchApplicationNotification, object: nil, queue: nil, using: {
+//            AppTimers.handleAppChange(for: $0)
+//        })
         
 		return
 	}
 	
 	func setupWindow(_ window: NSWindow) {
-		window.titleVisibility = .hidden
-		window.titlebarAppearsTransparent = true
-		window.standardWindowButton(NSWindow.ButtonType.closeButton)?.isHidden = true
-		window.standardWindowButton(NSWindow.ButtonType.miniaturizeButton)?.isHidden = true
-		window.standardWindowButton(NSWindow.ButtonType.zoomButton)?.isHidden = true
+//		window.titleVisibility = .hidden
+//		window.titlebarAppearsTransparent = true
+        window.styleMask = .borderless
+//		window.standardWindowButton(NSWindow.ButtonType.closeButton)?.isHidden = true
+//		window.standardWindowButton(NSWindow.ButtonType.miniaturizeButton)?.isHidden = true
+//		window.standardWindowButton(NSWindow.ButtonType.zoomButton)?.isHidden = true
 		window.isOpaque = false
-		window.hasShadow = false
+//		window.hasShadow = false
 		window.level = .floating
 		window.backgroundColor = NSColor.clear
-		window.isReleasedWhenClosed = false
-		window.isMovableByWindowBackground = true
+//		window.isReleasedWhenClosed = false
+//		window.isMovableByWindowBackground = true
 		window.collectionBehavior = .canJoinAllSpaces
-		window.titlebarSeparatorStyle = .none
+//		window.titlebarSeparatorStyle = .none
 		window.ignoresMouseEvents = true // comment this out for clickability (vera's)
 		window.delegate = self
 	}
@@ -272,9 +273,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 	
 //	func application
 	
-	func windowShouldClose(_ sender: NSWindow) -> Bool {
-		NSApplication.shared.hide(nil)
-		NSApplication.shared.unhideWithoutActivation()
-		return false
-	}
+//	func windowShouldClose(_ sender: NSWindow) -> Bool {
+//        print("got window close!")
+//		NSApplication.shared.hide(nil)
+//		NSApplication.shared.unhideWithoutActivation()
+//		return false
+//	}
 }

@@ -108,22 +108,22 @@ struct TickerView: View {
 //				remainingPower = getRemainingPower()
 //			})
 		}
-		.onAppear {
-			wakeFromSleepFunc = {
-				if let (i, walkTicker) = tickers.enumerated().first(where: { $0.element.name.contains("walk") }) {
-					selectedTicker = i
-					let newTicker = walkTicker
-                    guard let start = newTicker.start else { return }
-                    var time = Date().timeIntervalSince(start) + newTicker.offset
-                    if time >= 0 { time += 900 }
-                    let change = Int(time/900)*15
-                    newTicker.offsetType = .neg
-                    newTicker.equivalentOffset = false
-                    newTicker.offsetChange = showSeconds ? "\(change).0" : "\(change)"
-                    setCurrentTicker(newTicker.offsetResolved())
-				}
-			}
-		}
+//		.onAppear {
+//			wakeFromSleepFunc = {
+//				if let (i, walkTicker) = tickers.enumerated().first(where: { $0.element.name.contains("walk") }) {
+//					selectedTicker = i
+//					let newTicker = walkTicker
+//                    guard let start = newTicker.start else { return }
+//                    var time = Date().timeIntervalSince(start) + newTicker.offset
+//                    if time >= 0 { time += 900 }
+//                    let change = Int(time/900)*15
+//                    newTicker.offsetType = .neg
+//                    newTicker.equivalentOffset = false
+//                    newTicker.offsetChange = showSeconds ? "\(change).0" : "\(change)"
+//                    setCurrentTicker(newTicker.offsetResolved())
+//				}
+//			}
+//		}
 	}
 	
 	func setTickers(_ newTickers: [Ticker]) {
@@ -252,11 +252,14 @@ struct TickerView: View {
         }
         
         if event.modifierFlags.contains(.command) {
-			if event.characters == "s" { // vera may want to change this back to space, along with other changes
-				if let currentTicker {
-					setCurrentTicker(currentTicker.activityToggled())
-				}
-			} else if event.characters == "e" {
+            if event.characters == "s" { // vera may want to change this back to space, along with other changes
+                if let currentTicker {
+                    setCurrentTicker(currentTicker.activityToggled())
+                }
+            } else if event.characters == "w" {
+                NSApplication.shared.hide(nil)
+                NSApplication.shared.unhideWithoutActivation()
+            } else if event.characters == "e" {
                 setTickers([Ticker()] + tickers)
 				selectedTicker = 0
 				Storage.set(selectedTicker, for: .selected)

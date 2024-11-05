@@ -31,6 +31,8 @@ struct TickerView: View {
 //	@State var nextCheckin: Date? = nil
 	@State var activeCountdowns = 2
 //	@State var remainingPower: Int = getRemainingPower()
+    
+    @State var screenResChanged = NotificationCenter.default.publisher(for: NSApplication.didChangeScreenParametersNotification)
 	
 	var tickers: [Ticker] { tickerHistory[tickerHistory.count - 1 - versionsBack] }
 	var currentTicker: Ticker? { tickers.isEmpty ? nil : tickers[selectedTicker] }
@@ -124,6 +126,12 @@ struct TickerView: View {
 //				}
 //			}
 //		}
+        .onReceive(screenResChanged, perform: { _ in
+            redrawWindows()
+//                    WindowHelper.refreshScripts()
+        })
+        .onAppear(perform: redrawWindows)
+        .font(Font.custom("Baskerville", size: 14.0))
 	}
 	
 	func setTickers(_ newTickers: [Ticker]) {

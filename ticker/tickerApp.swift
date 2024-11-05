@@ -11,19 +11,14 @@ import HotKey
 @main
 struct tickerApp: App {
 	@NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
-	var screenResChanged = NotificationCenter.default.publisher(for: NSApplication.didChangeScreenParametersNotification)
 	
     var body: some Scene {
-		WindowGroup(id: "main") {
-			TickerView()
-				.onReceive(screenResChanged, perform: { _ in
-					redrawWindows()
-//					WindowHelper.refreshScripts()
-				})
-				.onAppear(perform: redrawWindows)
-                .font(Font.custom("Baskerville", size: 14.0))
-        }
-		.windowResizability(.contentSize)
+        Settings { }
+//		WindowGroup(id: "main") {
+//			TickerView()
+//        }
+//		.windowResizability(.contentSize)
+//        .windowStyle(.hiddenTitleBar)
     }
 }
 
@@ -55,20 +50,21 @@ struct tickerApp: App {
 //	}
 //}
 
+var tickerWindow = MyWindow(contentRect: NSRect(x: 0, y: 0, width: 500, height: 500), styleMask: [], backing: .buffered, defer: false)
 var hideWindow = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 100, height: 100), styleMask: [], backing: .buffered, defer: false)
 var warningWindow = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 100, height: 100), styleMask: [], backing: .buffered, defer: false)
 var currentScreen = NSRect(x: 0, y: 0, width: 1000, height: 1000)
 //var wakeFromSleepFunc: (() -> Void)? = nil
 
 func redrawWindows() {
-    setBrightness()
+//    setBrightness()
     
 	guard let screenSize = NSScreen.main?.frame else { return }
 	hideWindow.setFrame(NSRect(x: 0, y: 0, width: screenSize.width, height: screenSize.height), display: false)
     warningWindow.setFrame(NSRect(x: 0, y: 0, width: screenSize.width, height: screenSize.height), display: false)
 	
-	guard let window = NSApplication.shared.windows.first(where: { $0.identifier?.rawValue == "main-AppWindow-1" }) else { return }
-	window.setFrameOrigin(NSPoint(x: screenSize.width - 500, y: 0))
+//	guard let window = NSApplication.shared.windows.first(where: { $0.identifier?.rawValue == "main-AppWindow-1" }) else { return }
+	tickerWindow.setFrameOrigin(NSPoint(x: screenSize.width - 500, y: 0))
 }
 
 func handleWarningUpdate() {
@@ -81,12 +77,16 @@ func handleWarningUpdate() {
     }
 }
 
-func setBrightness() {
-    let executableURL = URL(fileURLWithPath: "/usr/bin/shortcuts")
-    if NSScreen.main?.frame.width ?? 0 > 1512 {
-        try! Process.run(executableURL, arguments: ["run", "dim"], terminationHandler: nil)
-    }
+class MyWindow: NSWindow {
+    override var canBecomeKey: Bool { true }
 }
+
+//func setBrightness() {
+//    let executableURL = URL(fileURLWithPath: "/usr/bin/shortcuts")
+//    if NSScreen.main?.frame.width ?? 0 > 1512 {
+//        try! Process.run(executableURL, arguments: ["run", "dim"], terminationHandler: nil)
+//    }
+//}
 
 class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 //	var statusBar: StatusBarController?
@@ -112,10 +112,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 //    let arrangeRightKey = HotKey(key: .rightArrow, modifiers: [.command, .option])
 	
 	func applicationDidFinishLaunching(_ notification: Notification) {
-		if let window = NSApplication.shared.windows.first(where: { $0.identifier?.rawValue == "main-AppWindow-1" }) {
-			setupWindow(window)
-		}
-		
+        setupWindow()
+        
+        NSApp.setActivationPolicy(.accessory)
 		hideWindow.isReleasedWhenClosed = false
 		hideWindow.backgroundColor = NSColor.black
         warningWindow.isReleasedWhenClosed = false
@@ -234,23 +233,16 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 		return
 	}
 	
-	func setupWindow(_ window: NSWindow) {
-//		window.titleVisibility = .hidden
-//		window.titlebarAppearsTransparent = true
-        window.styleMask = .borderless
-//		window.standardWindowButton(NSWindow.ButtonType.closeButton)?.isHidden = true
-//		window.standardWindowButton(NSWindow.ButtonType.miniaturizeButton)?.isHidden = true
-//		window.standardWindowButton(NSWindow.ButtonType.zoomButton)?.isHidden = true
-		window.isOpaque = false
-//		window.hasShadow = false
-		window.level = .floating
-		window.backgroundColor = NSColor.clear
-//		window.isReleasedWhenClosed = false
-//		window.isMovableByWindowBackground = true
-		window.collectionBehavior = .canJoinAllSpaces
-//		window.titlebarSeparatorStyle = .none
-		window.ignoresMouseEvents = true // comment this out for clickability (vera's)
-		window.delegate = self
+	func setupWindow() {
+        tickerWindow.contentView = NSHostingView(rootView: TickerView())
+//        tickerWindow.styleMask = .borderless
+        tickerWindow.level = .floating
+        tickerWindow.backgroundColor = NSColor.clear
+        tickerWindow.isMovableByWindowBackground = false
+        tickerWindow.collectionBehavior = .canJoinAllSpaces
+        tickerWindow.ignoresMouseEvents = true // comment this out for clickability (vera's)
+        tickerWindow.delegate = self
+        tickerWindow.orderFrontRegardless()
 	}
 	
 //	// https://stackoverflow.com/questions/70091919/how-set-position-of-window-on-the-desktop-in-swiftui

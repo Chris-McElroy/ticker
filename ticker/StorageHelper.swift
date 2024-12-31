@@ -31,6 +31,20 @@ class Storage {
 	static func set(_ value: Any?, for key: Key) {
 		UserDefaults.standard.setValue(value, forKey: key.rawValue)
 	}
+    
+    static func getDate(of key: Key) -> Date {
+        let timeElapsed = getDouble(for: key)
+        return Date.init(timeIntervalSinceReferenceDate: timeElapsed)
+    }
+    
+    static func storeDate(of key: Key, _ date: Date) {
+        let timeElapsed = date.timeIntervalSinceReferenceDate
+        UserDefaults.standard.set(timeElapsed, forKey: key.rawValue)
+    }
+    
+    static func getDouble(for key: Key) -> Double {
+        UserDefaults.standard.double(forKey: key.rawValue)
+    }
 }
 
 enum Key: String {
@@ -43,4 +57,7 @@ enum Key: String {
 	case offset = "offset"
 	case showSeconds = "showSeconds"
 	case showDays = "showDays"
+    case lastStartTime = "lastStartTime"
+    case lastEndTime = "lastEndTime"
+    case projectTimerState = "projectTimerState"
 }

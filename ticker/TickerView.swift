@@ -19,7 +19,15 @@ var warning = false
 let bundle = CFBundleCreate(kCFAllocatorDefault, NSURL(fileURLWithPath: "/System/Library/PrivateFrameworks/MediaRemote.framework"))
 
 struct TickerView: View {
-	@State var tickerHistory: [[Ticker]] = [Storage.tickerArray().compactMap { Ticker(from: $0) }]
+    @State var tickerHistory: [[Ticker]] = {
+        var storedTickers = Storage.tickerArray().compactMap { Ticker(from: $0) }
+        if ProjectTimer.state == .project {
+            storedTickers = storedTickers + [ProjectTimer.getProjectTicker()]
+        } else if ProjectTimer.state == .cooldown {
+            storedTickers = storedTickers + [ProjectTimer.getCooldownTicker()]
+        }
+        return [storedTickers]
+    }()
 	@State var versionsBack: Int = 0
 	@State var selectedTicker: Int = Storage.int(.selected)
 	@State var isActive: Bool = false
@@ -34,7 +42,13 @@ struct TickerView: View {
     
     @State var screenResChanged = NotificationCenter.default.publisher(for: NSApplication.didChangeScreenParametersNotification)
 	
-	var tickers: [Ticker] { tickerHistory[tickerHistory.count - 1 - versionsBack] }
+    var tickers: [Ticker] {
+        if let projectTicker = ProjectTimer.main {
+            tickerHistory[tickerHistory.count - 1 - versionsBack] + [projectTicker]
+        } else {
+            tickerHistory[tickerHistory.count - 1 - versionsBack]
+        }
+    }
 	var currentTicker: Ticker? { tickers.isEmpty ? nil : tickers[selectedTicker] }
 	
     var body: some View {
@@ -48,6 +62,7 @@ struct TickerView: View {
 							.underline(isActive && i == selectedTicker)
 							.italic(!tickers[i].active)
 							.opacity(tickers[i].visible ? 1 : (isActive ? 0.3 : 0))
+                            .foregroundStyle(tickers[i] as? ProjectTimer != nil ? (ProjectTimer.state == .cooldown ? .purple : .yellow) : .white)
 							.background(tickers[i].visible || isActive ? .black.opacity(0.5) : .clear)
 					}
 					let time = getCurrentTime(withDay: showDays || isActive)
@@ -102,10 +117,12 @@ struct TickerView: View {
 		}
         .background(KeyPressHelper(keyDownFunc, keyUpFunc))
 		.onAppear {
+            selectedTicker %= max(1, tickers.count)
 			Timer.scheduledTimer(withTimeInterval: 0.2, repeats: true, block: { _ in
 				updater.toggle()
 				monitorTickers()
 			})
+            print(ProjectTimer.lastEndTime, ProjectTimer.lastStartTime, ProjectTimer.state, selectedTicker)
 //			Timer.scheduledTimer(withTimeInterval: 100, repeats: true, block: { _ in
 //				remainingPower = getRemainingPower()
 //			})
@@ -132,6 +149,25 @@ struct TickerView: View {
         })
         .onAppear(perform: redrawWindows)
         .font(Font.custom("Baskerville", size: 14.0))
+        .onChange(of: ProjectTimer.lastEndTime, {
+            Storage.storeDate(of: .lastEndTime, ProjectTimer.lastEndTime)
+        })
+        .onChange(of: ProjectTimer.lastStartTime, {
+            Storage.storeDate(of: .lastStartTime, ProjectTimer.lastStartTime)
+        })
+        .onChange(of: ProjectTimer.state, {
+            print("changed!", ProjectTimer.state)
+            if ProjectTimer.state == .none { // auto deletes cooldown ticker if it goes positive
+                while let (i, _) = tickers.enumerated().first(where: { $0.element as? ProjectTimer != nil }) {
+                    var newTickers = tickers
+                    newTickers.remove(at: i)
+                    selectedTicker %= max(1, newTickers.count)
+                    setTickers(newTickers)
+                    Storage.set(selectedTicker, for: .selected)
+                }
+            }
+            Storage.set(ProjectTimer.state.rawValue, for: .projectTimerState)
+        })
 	}
 	
 	func setTickers(_ newTickers: [Ticker]) {
@@ -139,16 +175,25 @@ struct TickerView: View {
 			tickerHistory.removeLast(versionsBack)
 			versionsBack = 0
 		}
-		tickerHistory.append(newTickers)
+        if let projectTicker = newTickers.first(where: { $0 as? ProjectTimer != nil }) as? ProjectTimer {
+            ProjectTimer.main = projectTicker
+        }
+        let filteredTickers = newTickers.filter { $0 as? ProjectTimer == nil }
+        tickerHistory.append(filteredTickers)
 		storeTickers()
 	}
 	
 	func setCurrentTicker(_ newValue: Ticker?) {
 		guard let newValue else { return }
 		if tickers.isEmpty { return }
-		var newTickers = tickers
-		newTickers[selectedTicker] = newValue
-		setTickers(newTickers)
+        if let projectTicker = newValue as? ProjectTimer {
+            print("changing!")
+            ProjectTimer.main = projectTicker
+        } else {
+            var newTickers = tickers
+            newTickers[selectedTicker] = newValue
+            setTickers(newTickers)
+        }
 	}
 	
 	func monitorTickers() {
@@ -285,6 +330,7 @@ struct TickerView: View {
 				} else {
 					versionsBack = min(versionsBack + 1, tickerHistory.count - 1)
 				}
+                selectedTicker %= max(1, tickers.count)
 //			} else if event.characters == "œ" {
 //				NSApp.terminate(self)
 			} else if event.characters == "c" {
@@ -302,8 +348,25 @@ struct TickerView: View {
 			} else if event.characters == "f" {
 				if tickers.count > selectedTicker {
 					var newTickers = tickers
-					newTickers.remove(at: selectedTicker)
-					selectedTicker %= max(1, newTickers.count)
+                    if let projectTicker = currentTicker as? ProjectTimer {
+                        if ProjectTimer.cooldownEndTime < .now {
+                            ProjectTimer.main = nil
+                            selectedTicker %= max(1, tickers.count)
+                            ProjectTimer.state = .none
+                        } else if ProjectTimer.state == .project {
+                            if projectTicker.wasNegative || ProjectTimer.activeProject {
+                                print("set last end time")
+                                ProjectTimer.lastEndTime = .now
+                            }
+                            ProjectTimer.main = ProjectTimer.getCooldownTicker()
+                            print("pt", ProjectTimer.main?.getTimeString(), tickers.last?.getTimeString())
+                        } else {
+                            projectTicker.visible = false
+                        }
+                    } else {
+                        newTickers.remove(at: selectedTicker)
+                        selectedTicker %= max(1, newTickers.count)
+                    }
 					setTickers(newTickers)
 					Storage.set(selectedTicker, for: .selected)
 				}
@@ -364,7 +427,13 @@ struct TickerView: View {
 //                    newTicker.offsetChange = showSeconds ? "\(change).0" : "\(change)"
 //                    setCurrentTicker(newTicker.offsetResolved())
 //				}
-			}
+            } else if event.characters == "´" { // option e
+                guard ProjectTimer.state == .none else { return }
+                guard ProjectTimer.main == nil else { return }
+                ProjectTimer.main = ProjectTimer()
+                selectedTicker = tickers.count - 1
+                Storage.set(selectedTicker, for: .selected)
+            }
 			
 			updater.toggle()
 			return
@@ -450,7 +519,7 @@ struct TickerView: View {
     }
 	
 	func storeTickers() {
-		Storage.set(tickers.map { $0.toDict() }, for: .tickers)
+		Storage.set(tickers.compactMap { $0.toDict() }, for: .tickers)
 	}
 }
 

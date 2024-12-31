@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		1E2A6EF5296CFE3200B21838 /* Ticker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E2A6EF4296CFE3200B21838 /* Ticker.swift */; };
 		1E6F84F42A59CFFB00B43C2A /* WindowHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E6F84F32A59CFFB00B43C2A /* WindowHelper.swift */; };
+		1E7C9CFE2D18940300CD776B /* ProjectTimer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E7C9CFD2D1893FD00CD776B /* ProjectTimer.swift */; };
 		1E88C96F2922EBE700E603EA /* StorageHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E88C96E2922EBE700E603EA /* StorageHelper.swift */; };
 		1E951D172C51832900A7343E /* AppTimers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E951D162C51832300A7343E /* AppTimers.swift */; };
 		1E9BD80A291DB9F200924734 /* KeyPressHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E9BD809291DB9F200924734 /* KeyPressHelper.swift */; };
@@ -25,6 +26,7 @@
 		1E2A6EF4296CFE3200B21838 /* Ticker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Ticker.swift; sourceTree = "<group>"; };
 		1E6F84F22A59C52A00B43C2A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		1E6F84F32A59CFFB00B43C2A /* WindowHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowHelper.swift; sourceTree = "<group>"; };
+		1E7C9CFD2D1893FD00CD776B /* ProjectTimer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectTimer.swift; sourceTree = "<group>"; };
 		1E88C96E2922EBE700E603EA /* StorageHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageHelper.swift; sourceTree = "<group>"; };
 		1E951D162C51832300A7343E /* AppTimers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTimers.swift; sourceTree = "<group>"; };
 		1E9BD809291DB9F200924734 /* KeyPressHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyPressHelper.swift; sourceTree = "<group>"; };
@@ -77,6 +79,7 @@
 				1E6F84F32A59CFFB00B43C2A /* WindowHelper.swift */,
 				1EE25A33291D2AF100F2A038 /* TickerView.swift */,
 				1E2A6EF4296CFE3200B21838 /* Ticker.swift */,
+				1E7C9CFD2D1893FD00CD776B /* ProjectTimer.swift */,
 				1E9E4039295D42220093B724 /* GeneralHelper.swift */,
 				1E9BD809291DB9F200924734 /* KeyPressHelper.swift */,
 				1EE25A35291D2AF200F2A038 /* Assets.xcassets */,
@@ -173,6 +176,7 @@
 				1E9BD80A291DB9F200924734 /* KeyPressHelper.swift in Sources */,
 				1EE25A34291D2AF100F2A038 /* TickerView.swift in Sources */,
 				1E2A6EF5296CFE3200B21838 /* Ticker.swift in Sources */,
+				1E7C9CFE2D18940300CD776B /* ProjectTimer.swift in Sources */,
 				1E9E403A295D42220093B724 /* GeneralHelper.swift in Sources */,
 				1E951D172C51832900A7343E /* AppTimers.swift in Sources */,
 				1EE25A32291D2AF100F2A038 /* tickerApp.swift in Sources */,

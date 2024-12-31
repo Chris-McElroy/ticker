@@ -85,7 +85,9 @@ class Ticker {
 		let posTime = abs(time)
 //		validCountdown = time < 0 && time > -checkinThreshold && active
 		
-		if !showTotals {
+        if (self as? ProjectTimer != nil && ProjectTimer.state != .project) {
+            wasNegative = time < 0
+        } else if !showTotals {
 			if wasNegative && time >= 0 {
 				flashing = true
 			}
@@ -100,6 +102,17 @@ class Ticker {
             
             nearlyFlashing = time < 0 && time > -15
 		}
+        
+        if self as? ProjectTimer != nil && ProjectTimer.state == .cooldown && !wasNegative {
+            self.visible = false
+            ProjectTimer.state = .none
+        /*
+         if you happen to have the app open,
+         this is not the cleanest animation,
+         (you can see it turn yellow/white for a few frames)
+         but i'm not going to worry about that for now
+         */
+        }
 		
 		let seconds = Int(posTime.rounded(.down)) % 60
 		let min = (Int(posTime.rounded(.down))/60) % 60
@@ -176,7 +189,7 @@ class Ticker {
 		}
 	}
 	
-	func toDict() -> [String: Any] {
+	func toDict() -> [String: Any]? {
 		[
 			Key.start.rawValue: start?.timeIntervalSinceReferenceDate ?? 0,
 			Key.name.rawValue: name,

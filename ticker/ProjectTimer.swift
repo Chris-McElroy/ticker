@@ -13,8 +13,6 @@ class ProjectTimer: Ticker {
     static var lastEndTime: Date = Storage.getDate(of: .lastEndTime)
     static var state: State = .none
     
-    // TODO make it so you can't name these
-    
     static var cooldownEndTime: Date {
         lastEndTime + projectTime
     }
@@ -47,7 +45,6 @@ class ProjectTimer: Ticker {
     }
     
     override func offsetResolved() -> Ticker {
-        print("resolving?", offsetChange, offset, ProjectTimer.state)
         guard var offsetChange else { return self }
         
         guard offset == 0 else { self.offsetChange = nil; return self }
@@ -94,14 +91,12 @@ class ProjectTimer: Ticker {
             newOffset = eqAmt - newOffset
         }
         
-        print("fe", newOffset, offsetType)
         guard (offsetType == .neg ? -newOffset : newOffset) < 0 else { return self }
         
         ProjectTimer.state = .project
         ProjectTimer.lastStartTime = now
         ProjectTimer.lastEndTime = now + (offsetType == .neg ? newOffset : -newOffset)
         
-        print("returning!")
         return ProjectTimer(name: name, origin: now, start: now,
                       offset: (offsetType == .neg ? -newOffset : newOffset), visible: visible)
     }
@@ -121,7 +116,6 @@ class ProjectTimer: Ticker {
         ProjectTimer.state = .cooldown
         let start = ProjectTimer.lastEndTime
         let offset = -ProjectTimer.lastStartTime.distance(to: ProjectTimer.lastEndTime)
-        print("cool", ProjectTimer.lastEndTime, ProjectTimer.lastStartTime, -ProjectTimer.lastStartTime.distance(to: ProjectTimer.lastEndTime), offset, start)
         return ProjectTimer(name: "", origin: start, start: start, offset: offset, visible: true)
     }
     

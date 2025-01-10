@@ -9,40 +9,7 @@ import SwiftUI
 
 class ProjectTimer: Ticker {
     static var main: ProjectTimer? = nil
-    static var lastStartTime: Date = Storage.getDate(of: .lastStartTime)
-    static var lastEndTime: Date = Storage.getDate(of: .lastEndTime)
     static var state: State = .none
-    
-    static var cooldownEndTime: Date {
-        lastEndTime + projectTime
-    }
-    
-    static var activeProject: Bool {
-        return Date.now <= lastEndTime
-    }
-    
-    static var activeCooldown: Bool {
-        return Date.now > lastEndTime && cooldownEndTime > Date.now
-    }
-    
-    static var projectTime: TimeInterval {
-        lastStartTime.distance(to: lastEndTime)
-    }
-    
-    static func initStaticVars() {
-        let storedState = State(rawValue: Storage.int(.projectTimerState)) ?? .none
-        
-        if activeProject || (activeCooldown && storedState == .project) {
-            state = .project
-            main = ProjectTimer(name: "", origin: lastStartTime, start: lastStartTime, offset: -projectTime, visible: true)
-        } else if activeCooldown {
-            state = .cooldown
-            main = ProjectTimer(name: "", origin: lastEndTime, start: lastEndTime, offset: -projectTime, visible: true)
-        } else {
-            state = .none
-            main = nil
-        }
-    }
     
     override func offsetResolved() -> Ticker {
         guard var offsetChange else { return self }
@@ -94,8 +61,9 @@ class ProjectTimer: Ticker {
         guard (offsetType == .neg ? -newOffset : newOffset) < 0 else { return self }
         
         ProjectTimer.state = .project
-        ProjectTimer.lastStartTime = now
-        ProjectTimer.lastEndTime = now + (offsetType == .neg ? newOffset : -newOffset)
+        Storage.main.lastStartTime = now
+        Storage.main.lastEndTime = now + (offsetType == .neg ? newOffset : -newOffset)
+        Storage.main.storeDates()
         
         return ProjectTimer(name: name, origin: now, start: now,
                       offset: (offsetType == .neg ? -newOffset : newOffset), visible: visible)
@@ -107,15 +75,15 @@ class ProjectTimer: Ticker {
     
     static func getProjectTicker() -> ProjectTimer {
         ProjectTimer.state = .project
-        let start = ProjectTimer.lastStartTime
-        let offset = -ProjectTimer.lastStartTime.distance(to: ProjectTimer.lastEndTime)
+        let start = Storage.main.lastStartTime
+        let offset = -Storage.main.lastStartTime.distance(to: Storage.main.lastEndTime)
         return ProjectTimer(name: "", origin: start, start: start, offset: offset, visible: true)
     }
     
     static func getCooldownTicker() -> ProjectTimer {
         ProjectTimer.state = .cooldown
-        let start = ProjectTimer.lastEndTime
-        let offset = -ProjectTimer.lastStartTime.distance(to: ProjectTimer.lastEndTime)
+        let start = Storage.main.lastEndTime
+        let offset = -Storage.main.lastStartTime.distance(to: Storage.main.lastEndTime)
         return ProjectTimer(name: "", origin: start, start: start, offset: offset, visible: true)
     }
     

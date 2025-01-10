@@ -7,6 +7,7 @@
 
 import SwiftUI
 import HotKey
+import FirebaseCore
 
 @main
 struct tickerApp: App {
@@ -112,6 +113,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 //    let arrangeRightKey = HotKey(key: .rightArrow, modifiers: [.command, .option])
 	
 	func applicationDidFinishLaunching(_ notification: Notification) {
+        FirebaseApp.configure()
         setupWindow()
         
         NSApp.setActivationPolicy(.accessory)

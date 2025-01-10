@@ -19,15 +19,8 @@ var warning = false
 let bundle = CFBundleCreate(kCFAllocatorDefault, NSURL(fileURLWithPath: "/System/Library/PrivateFrameworks/MediaRemote.framework"))
 
 struct TickerView: View {
-    @State var tickerHistory: [[Ticker]] = {
-        var storedTickers = Storage.tickerArray().compactMap { Ticker(from: $0) }
-        if ProjectTimer.state == .project {
-            storedTickers = storedTickers + [ProjectTimer.getProjectTicker()]
-        } else if ProjectTimer.state == .cooldown {
-            storedTickers = storedTickers + [ProjectTimer.getCooldownTicker()]
-        }
-        return [storedTickers]
-    }()
+    @ObservedObject var storage = Storage.main
+    @State var tickerHistory: [[Ticker]] = [Storage.tickerArray().compactMap { Ticker(from: $0) }]
 	@State var versionsBack: Int = 0
 	@State var selectedTicker: Int = Storage.int(.selected)
 	@State var isActive: Bool = false
@@ -117,7 +110,6 @@ struct TickerView: View {
 		}
         .background(KeyPressHelper(keyDownFunc, keyUpFunc))
 		.onAppear {
-            ProjectTimer.initStaticVars()
             selectedTicker = min(max(selectedTicker, 0), tickers.count - 1)
 			Timer.scheduledTimer(withTimeInterval: 0.2, repeats: true, block: { _ in
                 monitorTickers()
@@ -149,12 +141,6 @@ struct TickerView: View {
         })
         .onAppear(perform: redrawWindows)
         .font(Font.custom("Baskerville", size: 14.0))
-        .onChange(of: ProjectTimer.lastEndTime, {
-            Storage.storeDate(of: .lastEndTime, ProjectTimer.lastEndTime)
-        })
-        .onChange(of: ProjectTimer.lastStartTime, {
-            Storage.storeDate(of: .lastStartTime, ProjectTimer.lastStartTime)
-        })
 	}
 	
 	func setTickers(_ newTickers: [Ticker]) {
@@ -304,6 +290,7 @@ struct TickerView: View {
         
         if event.modifierFlags.contains(.command) {
             if event.characters == "s" { // vera may want to change this back to space, along with other changes
+                print(tickers.count(where: { $0 as? ProjectTimer != nil }), tickerHistory.count, tickerHistory.last?.count(where: { $0 as? ProjectTimer != nil }))
                 if let currentTicker {
                     setCurrentTicker(currentTicker.activityToggled())
                 }
@@ -347,13 +334,14 @@ struct TickerView: View {
 				if tickers.count > selectedTicker {
 					var newTickers = tickers
                     if let projectTicker = currentTicker as? ProjectTimer {
-                        if ProjectTimer.cooldownEndTime < .now {
+                        if storage.cooldownEndTime < .now {
                             newTickers.remove(at: selectedTicker)
                             selectedTicker = min(max(selectedTicker, 0), newTickers.count - 1)
                             ProjectTimer.state = .none
                         } else if ProjectTimer.state == .project {
-                            if projectTicker.wasNegative || ProjectTimer.activeProject {
-                                ProjectTimer.lastEndTime = .now
+                            if projectTicker.wasNegative || storage.activeProject {
+                                storage.lastEndTime = .now
+                                storage.storeDate(of: .lastEndTime, storage.lastEndTime)
                             }
                             newTickers[selectedTicker] = ProjectTimer.getCooldownTicker()
                         } else {

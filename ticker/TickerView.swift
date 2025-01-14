@@ -79,6 +79,10 @@ struct TickerView: View {
 		.foregroundColor(.white)
 //		.foregroundColor(Color(hue: 0, saturation: 0, brightness: 0.5)) // for vera's gray
 		.frame(width: 500, height: 500)
+        .onChange(of: ProjectTimer.state, {
+            selectedTicker = min(max(selectedTicker, 0), tickers.count - 1)
+            Storage.set(selectedTicker, for: .selected)
+        })
 		.onReceive(NotificationCenter.default.publisher( for: NSApplication.didBecomeActiveNotification)) { _ in
 			isActive = true
 //			nextCheckin = nil
@@ -111,6 +115,7 @@ struct TickerView: View {
         .background(KeyPressHelper(keyDownFunc, keyUpFunc))
 		.onAppear {
             selectedTicker = min(max(selectedTicker, 0), tickers.count - 1)
+            Storage.set(selectedTicker, for: .selected)
 			Timer.scheduledTimer(withTimeInterval: 0.2, repeats: true, block: { _ in
                 monitorTickers()
 				updater.toggle()

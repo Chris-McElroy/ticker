@@ -38,13 +38,11 @@ class Storage: ObservableObject {
         }
         _ = ref.observe(DataEventType.value, with: { snapshot in
             if let dict = snapshot.value as? [String: [String: Double]] {
-                print("got change")
                 guard let otherID = dict.keys.first(where: { $0 != self.myID }) else { return }
                 guard let otherStart = dict[otherID]?[Key.lastStartTime.rawValue] else { return }
                 guard let otherEnd = dict[otherID]?[Key.lastEndTime.rawValue] else { return }
                 if otherStart !~ self.lastStartTime {
                     if otherStart > self.lastEndTime {
-                        print("got new start")
                         self.lastStartTime = otherStart
                         self.lastEndTime = otherEnd
                         self.storeDates()
@@ -52,7 +50,6 @@ class Storage: ObservableObject {
                     }
                 } else if otherEnd !~ self.lastEndTime {
                     if otherEnd < self.lastEndTime {
-                        print("got new end")
                         self.lastEndTime = otherEnd
                         self.storeDate(of: .lastEndTime, self.lastEndTime)
                         self.resetProjectTimer()

@@ -20,7 +20,7 @@ enum OffsetType: String {
 }
 
 class Ticker {
-	var name: String
+    var name: String
 	let origin: Date
 	let start: Date?
 	let offset: Double

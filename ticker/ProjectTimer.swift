@@ -9,7 +9,7 @@ import SwiftUI
 
 class ProjectTimer: Ticker {
     static var main: ProjectTimer? = nil
-    static var state: State = .none
+    static var state: State = ProjectTimer.State(rawValue: Storage.int(.projectTimerState)) ?? .none
     
     override func offsetResolved() -> Ticker {
         guard var offsetChange else { return self }
@@ -61,8 +61,9 @@ class ProjectTimer: Ticker {
         guard (offsetType == .neg ? -newOffset : newOffset) < 0 else { return self }
         
         ProjectTimer.state = .project
-        Storage.main.lastStartTime = now
-        Storage.main.lastEndTime = now + (offsetType == .neg ? newOffset : -newOffset)
+        Storage.set(ProjectTimer.state.rawValue, for: .projectTimerState)
+        Storage.main.lastStartTime = now.timeIntervalSinceReferenceDate
+        Storage.main.lastEndTime = now.timeIntervalSinceReferenceDate + (offsetType == .neg ? newOffset : -newOffset)
         Storage.main.storeDates()
         
         return ProjectTimer(name: name, origin: now, start: now,
@@ -75,15 +76,17 @@ class ProjectTimer: Ticker {
     
     static func getProjectTicker() -> ProjectTimer {
         ProjectTimer.state = .project
-        let start = Storage.main.lastStartTime
-        let offset = -Storage.main.lastStartTime.distance(to: Storage.main.lastEndTime)
+        Storage.set(ProjectTimer.state.rawValue, for: .projectTimerState)
+        let start = Date.init(timeIntervalSinceReferenceDate: Storage.main.lastStartTime)
+        let offset = -Storage.main.projectTime
         return ProjectTimer(name: "", origin: start, start: start, offset: offset, visible: true)
     }
     
     static func getCooldownTicker() -> ProjectTimer {
         ProjectTimer.state = .cooldown
-        let start = Storage.main.lastEndTime
-        let offset = -Storage.main.lastStartTime.distance(to: Storage.main.lastEndTime)
+        Storage.set(ProjectTimer.state.rawValue, for: .projectTimerState)
+        let start = Date.init(timeIntervalSinceReferenceDate: Storage.main.lastEndTime)
+        let offset = -Storage.main.projectTime
         return ProjectTimer(name: "", origin: start, start: start, offset: offset, visible: true)
     }
     

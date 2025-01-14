@@ -334,13 +334,14 @@ struct TickerView: View {
 				if tickers.count > selectedTicker {
 					var newTickers = tickers
                     if let projectTicker = currentTicker as? ProjectTimer {
-                        if storage.cooldownEndTime < .now {
+                        if storage.cooldownEndTime < Date.now.timeIntervalSinceReferenceDate {
                             newTickers.remove(at: selectedTicker)
                             selectedTicker = min(max(selectedTicker, 0), newTickers.count - 1)
                             ProjectTimer.state = .none
+                            Storage.set(ProjectTimer.state.rawValue, for: .projectTimerState)
                         } else if ProjectTimer.state == .project {
                             if projectTicker.wasNegative || storage.activeProject {
-                                storage.lastEndTime = .now
+                                storage.lastEndTime = Date.now.timeIntervalSinceReferenceDate
                                 storage.storeDate(of: .lastEndTime, storage.lastEndTime)
                             }
                             newTickers[selectedTicker] = ProjectTimer.getCooldownTicker()

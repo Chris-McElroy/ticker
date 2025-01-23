@@ -71,7 +71,7 @@ class Storage: ObservableObject {
         } else if activeCooldown {
             ProjectTimer.state = .cooldown
             Storage.set(ProjectTimer.state.rawValue, for: .projectTimerState)
-            ProjectTimer.main = ProjectTimer(name: "", origin: end, start: end, offset: -projectTime, visible: true)
+            ProjectTimer.main = ProjectTimer(name: "", origin: end, start: end, offset: -projectCooldownRatio*projectTime, visible: true)
         } else {
             ProjectTimer.state = .none
             Storage.set(ProjectTimer.state.rawValue, for: .projectTimerState)
@@ -123,7 +123,7 @@ class Storage: ObservableObject {
     }
     
     var cooldownEndTime: TimeInterval {
-        lastEndTime + projectTime
+        lastEndTime + projectCooldownRatio*projectTime
     }
     
     var activeProject: Bool {

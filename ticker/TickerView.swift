@@ -295,7 +295,7 @@ struct TickerView: View {
         
         if event.modifierFlags.contains(.command) {
             if event.characters == "s" { // vera may want to change this back to space, along with other changes
-                print(tickers.count(where: { $0 as? ProjectTimer != nil }), tickerHistory.count, tickerHistory.last?.count(where: { $0 as? ProjectTimer != nil }))
+//                print(tickers.count(where: { $0 as? ProjectTimer != nil }), tickerHistory.count, tickerHistory.last?.count(where: { $0 as? ProjectTimer != nil }))
                 if let currentTicker {
                     setCurrentTicker(currentTicker.activityToggled())
                 }
@@ -369,7 +369,7 @@ struct TickerView: View {
 			} else if event.characters == "®" { // option r
 				if let currentTicker {
 					if currentTicker.offsetChange == nil {
-						currentTicker.offsetType = .zero // deleting still fucks seletected ticker
+						currentTicker.offsetType = .zero // TODO? deleting still fucks seletected ticker
 						currentTicker.equivalentOffset = false
 						currentTicker.offsetChange = ""
 					}

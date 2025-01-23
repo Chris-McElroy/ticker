@@ -7,6 +7,8 @@
 
 import SwiftUI
 
+let projectCooldownRatio: Double = 4.0
+
 class ProjectTimer: Ticker {
     static var main: ProjectTimer? = nil
     static var state: State = ProjectTimer.State(rawValue: Storage.int(.projectTimerState)) ?? .none
@@ -86,7 +88,7 @@ class ProjectTimer: Ticker {
         ProjectTimer.state = .cooldown
         Storage.set(ProjectTimer.state.rawValue, for: .projectTimerState)
         let start = Date.init(timeIntervalSinceReferenceDate: Storage.main.lastEndTime)
-        let offset = -Storage.main.projectTime
+        let offset = -projectCooldownRatio*Storage.main.projectTime
         return ProjectTimer(name: "", origin: start, start: start, offset: offset, visible: true)
     }
     

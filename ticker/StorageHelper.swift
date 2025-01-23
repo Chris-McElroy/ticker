@@ -64,11 +64,12 @@ class Storage: ObservableObject {
     func resetProjectTimer() {
         let start = Date.init(timeIntervalSinceReferenceDate: lastStartTime)
         let end = Date.init(timeIntervalSinceReferenceDate: lastEndTime)
-        if activeProject {
+        print(Date.now.timeIntervalSinceReferenceDate - lastEndTime)
+        if Date.now.timeIntervalSinceReferenceDate + 1 <= lastEndTime {
             ProjectTimer.state = .project
             Storage.set(ProjectTimer.state.rawValue, for: .projectTimerState)
             ProjectTimer.main = ProjectTimer(name: "", origin: start, start: start, offset: -projectTime, visible: true)
-        } else if activeCooldown {
+        } else if activeProject || activeCooldown {
             ProjectTimer.state = .cooldown
             Storage.set(ProjectTimer.state.rawValue, for: .projectTimerState)
             ProjectTimer.main = ProjectTimer(name: "", origin: end, start: end, offset: -projectCooldownRatio*projectTime, visible: true)

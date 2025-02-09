@@ -85,7 +85,7 @@ class Ticker {
 		let posTime = abs(time)
 //		validCountdown = time < 0 && time > -checkinThreshold && active
 		
-        if (self as? ProjectTimer != nil && ProjectTimer.state != .project) {
+        if (self as? CooldownTimer)?.cooldown == true {
             wasNegative = time < 0
         } else if !showTotals {
 			if wasNegative && time >= 0 {

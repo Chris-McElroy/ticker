@@ -13,16 +13,28 @@ import FirebaseDatabase
 class Storage: ObservableObject {
     static let main: Storage = Storage()
     
-    @Published var lastStartTime: TimeInterval
-    @Published var lastEndTime: TimeInterval
+    @Published var projectStart: TimeInterval
+    @Published var consumeStart: TimeInterval
+    @Published var projectEnd: TimeInterval
+    @Published var consumeEnd: TimeInterval
+    var projectRatio: Double
+    var consumeRatio: Double
     
     var ref: DatabaseReference!
     var myID: String = Storage.string(.uuid) ?? "00000000000000000000000000000000"
     
     init() {
         ref = Database.database().reference()
-        lastStartTime = Storage.getDate(of: .lastStartTime)
-        lastEndTime = Storage.getDate(of: .lastEndTime)
+        projectStart = Storage.getDate(of: .projectStart)
+        consumeStart = Storage.getDate(of: .consumeStart)
+        projectEnd = Storage.getDate(of: .projectEnd)
+        consumeEnd = Storage.getDate(of: .consumeEnd)
+        projectRatio = Storage.getDouble(for: .projectRatio)
+        consumeRatio = Storage.getDouble(for: .consumeRatio)
+        
+        if projectRatio == 0 { projectRatio = 2.0 }
+        if consumeRatio == 0 { consumeRatio = 4.0 }
+        
         _ = Auth.auth().addStateDidChangeListener { (auth, user) in
             if let user = user {
                 Storage.set(user.uid, for: .uuid)
@@ -38,45 +50,83 @@ class Storage: ObservableObject {
         }
         _ = ref.observe(DataEventType.value, with: { snapshot in
             if let dict = snapshot.value as? [String: [String: Double]] {
-                guard let otherID = dict.keys.first(where: { $0 != self.myID }) else { return }
-                guard let otherStart = dict[otherID]?[Key.lastStartTime.rawValue] else { return }
-                guard let otherEnd = dict[otherID]?[Key.lastEndTime.rawValue] else { return }
-                if otherStart !~ self.lastStartTime {
-                    if otherStart > self.lastEndTime {
-                        self.lastStartTime = otherStart
-                        self.lastEndTime = otherEnd
-                        self.storeDates()
-                        self.resetProjectTimer()
-                    }
-                } else if otherEnd !~ self.lastEndTime {
-                    if otherEnd < self.lastEndTime {
-                        self.lastEndTime = otherEnd
-                        self.storeDate(of: .lastEndTime, self.lastEndTime)
-                        self.resetProjectTimer()
-                    }
-                }
+                self.projectRatio = dict[self.myID]?[Key.projectRatio.rawValue] ?? 2.0
+                self.consumeRatio = dict[self.myID]?[Key.consumeRatio.rawValue] ?? 4.0
+                guard let newDict = dict.first(where: { $0.key != self.myID }) else { return }
+                self.setProjectTimes(with: newDict.value)
+                self.setConsumeTimes(with: newDict.value)
             }
         })
         
         resetProjectTimer()
+        resetConsumeTimer()
+    }
+    
+    func setProjectTimes(with dict: [String: Double]) {
+        guard let end = dict[Key.projectEnd.rawValue] else { return }
+        if let start = dict[Key.projectStart.rawValue] {
+            if start ~> projectStart {
+                projectStart = start
+                projectEnd = end
+                storeProjectDates()
+                resetProjectTimer()
+            }
+        } else if end !~ projectEnd {
+            projectEnd = end
+            storeDate(of: .projectEnd, projectEnd)
+            resetProjectTimer()
+        }
+    }
+    
+    func setConsumeTimes(with dict: [String: Double]) {
+        guard let end = dict[Key.consumeEnd.rawValue] else { return }
+        if let start = dict[Key.consumeStart.rawValue] {
+            if start ~> consumeStart {
+                consumeStart = start
+                consumeEnd = end
+                storeConsumeDates()
+                resetConsumeTimer()
+            }
+        } else if end ~< projectEnd {
+            projectEnd = end
+            storeDate(of: .consumeEnd, consumeEnd)
+            resetProjectTimer()
+        }
     }
     
     func resetProjectTimer() {
-        let start = Date.init(timeIntervalSinceReferenceDate: lastStartTime)
-        let end = Date.init(timeIntervalSinceReferenceDate: lastEndTime)
-        print(Date.now.timeIntervalSinceReferenceDate - lastEndTime)
-        if Date.now.timeIntervalSinceReferenceDate + 1 <= lastEndTime {
-            ProjectTimer.state = .project
-            Storage.set(ProjectTimer.state.rawValue, for: .projectTimerState)
-            ProjectTimer.main = ProjectTimer(name: "", origin: start, start: start, offset: -projectTime, visible: true)
-        } else if activeProject || activeCooldown {
-            ProjectTimer.state = .cooldown
-            Storage.set(ProjectTimer.state.rawValue, for: .projectTimerState)
-            ProjectTimer.main = ProjectTimer(name: "", origin: end, start: end, offset: -projectCooldownRatio*projectTime, visible: true)
+        let start = Date.init(timeIntervalSinceReferenceDate: projectStart)
+        let end = Date.init(timeIntervalSinceReferenceDate: projectEnd)
+        if Date.now.timeIntervalSinceReferenceDate + 2 <= projectEnd {
+            CooldownTimer.projectState = .active
+            Storage.set(CooldownTimer.projectState.rawValue, for: .projectTimerState)
+            CooldownTimer.project = CooldownTimer(name: "", origin: start, start: start, offset: -projectTime, visible: true, project: true, cooldown: false)
+        } else if projectActive || projectCooldown {
+            CooldownTimer.projectState = .cooldown
+            Storage.set(CooldownTimer.projectState.rawValue, for: .projectTimerState)
+            CooldownTimer.project = CooldownTimer(name: "", origin: end, start: end, offset: -projectRatio*projectTime, visible: true, project: true, cooldown: true)
         } else {
-            ProjectTimer.state = .none
-            Storage.set(ProjectTimer.state.rawValue, for: .projectTimerState)
-            ProjectTimer.main = nil
+            CooldownTimer.projectState = .none
+            Storage.set(CooldownTimer.projectState.rawValue, for: .projectTimerState)
+            CooldownTimer.project = nil
+        }
+    }
+    
+    func resetConsumeTimer() {
+        let start = Date.init(timeIntervalSinceReferenceDate: consumeStart)
+        let end = Date.init(timeIntervalSinceReferenceDate: consumeEnd)
+        if Date.now.timeIntervalSinceReferenceDate + 2 <= consumeEnd {
+            CooldownTimer.consumeState = .active
+            Storage.set(CooldownTimer.consumeState.rawValue, for: .consumeTimerState)
+            CooldownTimer.consume = CooldownTimer(name: "", origin: start, start: start, offset: -consumeTime, visible: true, project: false, cooldown: false)
+        } else if consumeActive || consumeCooldown {
+            CooldownTimer.consumeState = .cooldown
+            Storage.set(CooldownTimer.projectState.rawValue, for: .consumeTimerState)
+            CooldownTimer.consume = CooldownTimer(name: "", origin: end, start: end, offset: -consumeRatio*consumeTime, visible: true, project: false, cooldown: true)
+        } else {
+            CooldownTimer.consumeState = .none
+            Storage.set(CooldownTimer.consumeState.rawValue, for: .consumeTimerState)
+            CooldownTimer.consume = nil
         }
     }
     
@@ -85,10 +135,18 @@ class Storage: ObservableObject {
         ref.child(myID).child(key.rawValue).setValue(date)
     }
     
-    func storeDates() {
-        UserDefaults.standard.set(lastStartTime, forKey: Key.lastStartTime.rawValue)
-        UserDefaults.standard.set(lastEndTime, forKey: Key.lastEndTime.rawValue)
-        ref.child(myID).setValue([Key.lastStartTime.rawValue: lastStartTime, Key.lastEndTime.rawValue: lastEndTime])
+    func storeProjectDates() {
+        UserDefaults.standard.set(projectStart, forKey: Key.projectStart.rawValue)
+        UserDefaults.standard.set(projectEnd, forKey: Key.projectEnd.rawValue)
+        ref.child(myID).child(Key.projectEnd.rawValue).setValue(projectEnd)
+        ref.child(myID).child(Key.projectStart.rawValue).setValue(projectStart)
+    }
+    
+    func storeConsumeDates() {
+        UserDefaults.standard.set(consumeStart, forKey: Key.consumeStart.rawValue)
+        UserDefaults.standard.set(consumeEnd, forKey: Key.consumeEnd.rawValue)
+        ref.child(myID).child(Key.consumeEnd.rawValue).setValue(consumeEnd)
+        ref.child(myID).child(Key.consumeStart.rawValue).setValue(consumeStart)
     }
     
 	static func dictionary(_ key: Key) -> [String: Any]? {
@@ -123,25 +181,44 @@ class Storage: ObservableObject {
         UserDefaults.standard.double(forKey: key.rawValue)
     }
     
-    var cooldownEndTime: TimeInterval {
-        lastEndTime + projectCooldownRatio*projectTime
-    }
-    
-    var activeProject: Bool {
-        return Date.now.timeIntervalSinceReferenceDate <= lastEndTime
-    }
-    
-    var activeCooldown: Bool {
-        return Date.now.timeIntervalSinceReferenceDate > lastEndTime && cooldownEndTime > Date.now.timeIntervalSinceReferenceDate
-    }
     
     var projectTime: TimeInterval {
-        lastEndTime - lastStartTime
+        projectEnd - projectStart
+    }
+    
+    var projectActive: Bool {
+        return Date.now.timeIntervalSinceReferenceDate <= projectEnd
+    }
+    
+    var projectCooldownEnd: TimeInterval {
+        projectEnd + projectRatio*projectTime
+    }
+    
+    var projectCooldown: Bool {
+        return Date.now.timeIntervalSinceReferenceDate > projectEnd && projectCooldownEnd > Date.now.timeIntervalSinceReferenceDate
+    }
+    
+    var consumeTime: TimeInterval {
+        consumeEnd - consumeStart
+    }
+    
+    var consumeActive: Bool {
+        return Date.now.timeIntervalSinceReferenceDate <= consumeEnd
+    }
+    
+    var consumeCooldownEnd: TimeInterval {
+        consumeEnd + consumeRatio*consumeTime
+    }
+    
+    var consumeCooldown: Bool {
+        return Date.now.timeIntervalSinceReferenceDate > consumeEnd && consumeCooldownEnd > Date.now.timeIntervalSinceReferenceDate
     }
 }
 
 infix operator ~ : ComparisonPrecedence
 infix operator !~ : ComparisonPrecedence
+infix operator ~> : ComparisonPrecedence
+infix operator ~< : ComparisonPrecedence
 
 extension Double {
     static func ~(lhs: Double, rhs: Double) -> Bool {
@@ -150,6 +227,14 @@ extension Double {
     
     static func !~(lhs: Double, rhs: Double) -> Bool {
         return abs(lhs - rhs) >= 0.00001
+    }
+    
+    static func ~>(lhs: Double, rhs: Double) -> Bool {
+        return lhs > rhs + 0.00001
+    }
+    
+    static func ~<(lhs: Double, rhs: Double) -> Bool {
+        return lhs + 0.00001 < rhs
     }
 }
 
@@ -163,8 +248,13 @@ enum Key: String {
 	case offset = "offset"
 	case showSeconds = "showSeconds"
 	case showDays = "showDays"
-    case lastStartTime = "lastStartTime"
-    case lastEndTime = "lastEndTime"
+    case projectStart = "projectStart"
+    case consumeStart = "consumeStart"
+    case projectEnd = "projectEnd"
+    case consumeEnd = "consumeEnd"
+    case projectRatio = "projectRatio"
+    case consumeRatio = "consumeRatio"
     case projectTimerState = "projectTimerState"
+    case consumeTimerState = "consumeTimerState"
     case uuid = "uuid"
 }

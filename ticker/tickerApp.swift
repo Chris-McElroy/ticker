@@ -89,10 +89,14 @@ class MyWindow: NSWindow {
 //    }
 //}
 
+let projectKey = HotKey(key: .z, modifiers: [.option])
+let consumeKey = HotKey(key: .four, modifiers: [.option])
+
 class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 //	var statusBar: StatusBarController?
 	let activationKey = HotKey(key: .e, modifiers: [.option])
     let quitKey = HotKey(key: .quote, modifiers: [.control])
+    
 	// vera's keys:
 //	let activationKey = HotKey(key: .z, modifiers: [.command, .option])
 //	let clickableKey = HotKey(key: .a, modifiers: [.option, .shift])

@@ -382,14 +382,15 @@ struct TickerView: View {
                             cooldownTicker.state = .none
                             Storage.set(cooldownTicker.state.rawValue, for: cooldownTicker.project ? .projectTimerState : .consumeTimerState)
                         } else if cooldownTicker.state == .active {
-                            // TODO i checked here if it was negative and if it was within the times but i don't see why
-                            let newEnd = Date.now.timeIntervalSinceReferenceDate
-                            if cooldownTicker.project {
-                                storage.projectEnd = newEnd
-                            } else {
-                                storage.consumeEnd = newEnd
+                            if cooldownTicker.project ? storage.projectActive : storage.consumeActive {
+                                let newEnd = Date.now.timeIntervalSinceReferenceDate
+                                if cooldownTicker.project {
+                                    storage.projectEnd = newEnd
+                                } else {
+                                    storage.consumeEnd = newEnd
+                                }
+                                storage.storeDate(of: cooldownTicker.project ? .projectEnd : .consumeEnd, newEnd)
                             }
-                            storage.storeDate(of: cooldownTicker.project ? .projectEnd : .consumeEnd, newEnd)
                             newTickers[selectedTicker] = CooldownTimer.getCooldownTicker(for: cooldownTicker.project)
                         } else {
                             cooldownTicker.visible = false

@@ -17,6 +17,7 @@ class Storage: ObservableObject {
     @Published var consumeStart: TimeInterval
     @Published var projectEnd: TimeInterval
     @Published var consumeEnd: TimeInterval
+    var updated: TimeInterval
     var projectRatio: Double
     var consumeRatio: Double
     
@@ -31,6 +32,7 @@ class Storage: ObservableObject {
         consumeEnd = Storage.getDate(of: .consumeEnd)
         projectRatio = Storage.getDouble(for: .projectRatio)
         consumeRatio = Storage.getDouble(for: .consumeRatio)
+        updated = Storage.getDouble(for: .updated)
         
         if projectRatio == 0 { projectRatio = 2.0 }
         if consumeRatio == 0 { consumeRatio = 4.0 }
@@ -50,11 +52,23 @@ class Storage: ObservableObject {
         }
         _ = ref.observe(DataEventType.value, with: { snapshot in
             if let dict = snapshot.value as? [String: [String: Double]] {
-                self.projectRatio = dict[self.myID]?[Key.projectRatio.rawValue] ?? 2.0
-                self.consumeRatio = dict[self.myID]?[Key.consumeRatio.rawValue] ?? 4.0
-                guard let newDict = dict.first(where: { $0.key != self.myID }) else { return }
-                self.setProjectTimes(with: newDict.value)
-                self.setConsumeTimes(with: newDict.value)
+                if let newProjectRatio = dict[self.myID]?[Key.projectRatio.rawValue], newProjectRatio != self.projectRatio {
+                    self.projectRatio = newProjectRatio
+                    Storage.set(self.projectRatio, for: .projectRatio)
+                    self.resetProjectTimer()
+                }
+                if let newConsumeRatio = dict[self.myID]?[Key.consumeRatio.rawValue], newConsumeRatio != self.consumeRatio {
+                    self.consumeRatio = newConsumeRatio
+                    Storage.set(self.consumeRatio, for: .consumeRatio)
+                    self.resetConsumeTimer()
+                }
+                guard let newDict = dict.first(where: { $0.key != self.myID })?.value else { return }
+                if newDict[Key.updated.rawValue] ?? 0 ~> self.updated {
+                    self.updated = newDict[Key.updated.rawValue] ?? 0
+                    self.setProjectTimes(with: newDict)
+                    self.setConsumeTimes(with: newDict)
+                    self.ref.child(self.myID).child(Key.updated.rawValue).setValue(self.updated)
+                }
             }
         })
         
@@ -65,15 +79,13 @@ class Storage: ObservableObject {
     func setProjectTimes(with dict: [String: Double]) {
         guard let end = dict[Key.projectEnd.rawValue] else { return }
         if let start = dict[Key.projectStart.rawValue] {
-            if start ~> projectStart {
-                projectStart = start
-                projectEnd = end
-                storeProjectDates()
-                resetProjectTimer()
-            }
-        } else if end !~ projectEnd {
+            projectStart = start
             projectEnd = end
-            storeDate(of: .projectEnd, projectEnd)
+            storeProjectDates(new: false)
+            resetProjectTimer()
+        } else {
+            projectEnd = end
+            storeDate(of: .projectEnd, projectEnd, new: false)
             resetProjectTimer()
         }
     }
@@ -81,15 +93,14 @@ class Storage: ObservableObject {
     func setConsumeTimes(with dict: [String: Double]) {
         guard let end = dict[Key.consumeEnd.rawValue] else { return }
         if let start = dict[Key.consumeStart.rawValue] {
-            if start ~> consumeStart {
-                consumeStart = start
-                consumeEnd = end
-                storeConsumeDates()
-                resetConsumeTimer()
-            }
-        } else if end ~< projectEnd {
-            projectEnd = end
-            storeDate(of: .consumeEnd, consumeEnd)
+            consumeStart = start
+            consumeEnd = end
+            storeConsumeDates(new: false)
+            resetConsumeTimer()
+        } else {
+            print("setting consume end", end, "update#", updated)
+            consumeEnd = end
+            storeDate(of: .consumeEnd, consumeEnd, new: false)
             resetProjectTimer()
         }
     }
@@ -130,23 +141,39 @@ class Storage: ObservableObject {
         }
     }
     
-    func storeDate(of key: Key, _ date: TimeInterval) {
+    func storeDate(of key: Key, _ date: TimeInterval, new: Bool = true) {
+        print("storing date", key)
         UserDefaults.standard.set(date, forKey: key.rawValue)
         ref.child(myID).child(key.rawValue).setValue(date)
+        if new {
+            updated = Date.now.timeIntervalSinceReferenceDate
+            ref.child(myID).child(Key.updated.rawValue).setValue(updated)
+        }
+        if key == .consumeEnd {
+            print("just posted updated end time", date, "update#:", updated, new)
+        }
     }
     
-    func storeProjectDates() {
+    func storeProjectDates(new: Bool = true) {
         UserDefaults.standard.set(projectStart, forKey: Key.projectStart.rawValue)
         UserDefaults.standard.set(projectEnd, forKey: Key.projectEnd.rawValue)
         ref.child(myID).child(Key.projectEnd.rawValue).setValue(projectEnd)
         ref.child(myID).child(Key.projectStart.rawValue).setValue(projectStart)
+        if new {
+            updated = Date.now.timeIntervalSinceReferenceDate
+            ref.child(myID).child(Key.updated.rawValue).setValue(updated)
+        }
     }
     
-    func storeConsumeDates() {
+    func storeConsumeDates(new: Bool = true) {
         UserDefaults.standard.set(consumeStart, forKey: Key.consumeStart.rawValue)
         UserDefaults.standard.set(consumeEnd, forKey: Key.consumeEnd.rawValue)
         ref.child(myID).child(Key.consumeEnd.rawValue).setValue(consumeEnd)
         ref.child(myID).child(Key.consumeStart.rawValue).setValue(consumeStart)
+        if new {
+            updated = Date.now.timeIntervalSinceReferenceDate
+            ref.child(myID).child(Key.updated.rawValue).setValue(updated)
+        }
     }
     
 	static func dictionary(_ key: Key) -> [String: Any]? {
@@ -256,5 +283,6 @@ enum Key: String {
     case consumeRatio = "consumeRatio"
     case projectTimerState = "projectTimerState"
     case consumeTimerState = "consumeTimerState"
+    case updated = "updated"
     case uuid = "uuid"
 }

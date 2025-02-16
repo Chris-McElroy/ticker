@@ -98,10 +98,9 @@ class Storage: ObservableObject {
             storeConsumeDates(new: false)
             resetConsumeTimer()
         } else {
-            print("setting consume end", end, "update#", updated)
             consumeEnd = end
             storeDate(of: .consumeEnd, consumeEnd, new: false)
-            resetProjectTimer()
+            resetConsumeTimer()
         }
     }
     
@@ -142,15 +141,11 @@ class Storage: ObservableObject {
     }
     
     func storeDate(of key: Key, _ date: TimeInterval, new: Bool = true) {
-        print("storing date", key)
         UserDefaults.standard.set(date, forKey: key.rawValue)
         ref.child(myID).child(key.rawValue).setValue(date)
         if new {
             updated = Date.now.timeIntervalSinceReferenceDate
             ref.child(myID).child(Key.updated.rawValue).setValue(updated)
-        }
-        if key == .consumeEnd {
-            print("just posted updated end time", date, "update#:", updated, new)
         }
     }
     

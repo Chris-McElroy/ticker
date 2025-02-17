@@ -7,6 +7,8 @@
 
 import SwiftUI
 import Combine
+import ScriptingBridge
+import Cocoa
 
 var showSeconds: Bool = Storage.bool(.showSeconds)
 var showDays: Bool = Storage.bool(.showDays)
@@ -14,6 +16,7 @@ var showTotals: Bool = false
 //var checkinThreshold: Double = 2520
 var lastAc = 0
 var warning = false
+let shortcutsShellURL = URL(fileURLWithPath: "/usr/bin/shortcuts")
 
 // Load framework
 let bundle = CFBundleCreate(kCFAllocatorDefault, NSURL(fileURLWithPath: "/System/Library/PrivateFrameworks/MediaRemote.framework"))
@@ -32,6 +35,7 @@ struct TickerView: View {
 //	@State var nextCheckin: Date? = nil
 	@State var activeCountdowns = 2
 //	@State var remainingPower: Int = getRemainingPower()
+    @State var consumeWarning: Date? = nil
     
     @State var screenResChanged = NotificationCenter.default.publisher(for: NSApplication.didChangeScreenParametersNotification)
 	
@@ -207,21 +211,48 @@ struct TickerView: View {
             setTickers(newTickers)
         }
 	}
+    
+//    func appleEvent(keyword: StaticString) -> AEKeyword {
+//        keyword
+//            .utf8Start
+//            .withMemoryRebound(to: DescType.self, capacity: 1, \.pointee)
+//            .bigEndian
+//    }
 	
 	func monitorTickers() {
-        for cooldownTicker in [CooldownTimer.project, CooldownTimer.consume].compactMap({ $0 }).filter({ $0.cooldown }) {
-            _ = cooldownTicker.getTimeString()
-            if !cooldownTicker.wasNegative {
-                if let (i, _) = tickers.enumerated().first(where: { $0.element === cooldownTicker }) {
-                    var newTickers = tickers
-                    newTickers.remove(at: i)
-                    selectedTicker = min(max(selectedTicker, 0), newTickers.count - 1)
-                    setTickers(newTickers)
-                    Storage.set(selectedTicker, for: .selected)
+        for cooldownTicker in [CooldownTimer.project, CooldownTimer.consume].compactMap({ $0 }) {
+            if cooldownTicker.cooldown {
+                _ = cooldownTicker.getTimeString()
+                if !cooldownTicker.wasNegative {
+                    if let (i, _) = tickers.enumerated().first(where: { $0.element === cooldownTicker }) {
+                        var newTickers = tickers
+                        newTickers.remove(at: i)
+                        selectedTicker = min(max(selectedTicker, 0), newTickers.count - 1)
+                        setTickers(newTickers)
+                        Storage.set(selectedTicker, for: .selected)
+                    }
+                    cooldownTicker.state = .none
+                    Storage.set(cooldownTicker.state.rawValue, for: cooldownTicker.project ? .projectTimerState : .consumeTimerState)
                 }
-                cooldownTicker.state = .none
-                Storage.set(cooldownTicker.state.rawValue, for: cooldownTicker.project ? .projectTimerState : .consumeTimerState)
+            } else if !cooldownTicker.project {
+                if cooldownTicker.nearlyFlashing && cooldownTicker.start != consumeWarning {
+                    consumeWarning = cooldownTicker.start
+                    if NSWorkspace.shared.frontmostApplication?.id == "com.apple.Safari" {
+                        if let safari = NSWorkspace.shared.frontmostApplication, safari.id == "com.apple.Safari" {
+                            let src = CGEventSource(stateID: .hidSystemState)
+                            CGEvent(keyboardEventSource: src, virtualKey: 3, keyDown: true)?.post(tap: .cghidEventTap)
+                            CGEvent(keyboardEventSource: src, virtualKey: 3, keyDown: false)?.post(tap: .cghidEventTap)
+                        }
+                    }
+                } else if cooldownTicker.flashing && cooldownTicker.start == consumeWarning {
+                    consumeWarning = nil
+                    if let safari = NSWorkspace.shared.frontmostApplication, safari.id == "com.apple.Safari" {
+                        safari.hide()
+                        try! Process.run(shortcutsShellURL, arguments: ["run", "pause"], terminationHandler: nil)
+                    }
+                }
             }
+            
         }
 		let hidingTicker = tickers.enumerated().first(where: { $0.element.flashing && !$0.element.name.contains("\\") })
 		let flashingTicker = tickers.enumerated().first(where: { $0.element.flashing && $0.element.name.contains("\\") })

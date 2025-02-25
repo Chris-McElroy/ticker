@@ -65,6 +65,7 @@ class Storage: ObservableObject {
                 guard let newDict = dict.first(where: { $0.key != self.myID })?.value else { return }
                 if newDict[Key.updated.rawValue] ?? 0 ~> self.updated {
                     self.updated = newDict[Key.updated.rawValue] ?? 0
+                    Storage.set(self.updated, for: .updated)
                     self.setProjectTimes(with: newDict)
                     self.setConsumeTimes(with: newDict)
                     self.ref.child(self.myID).child(Key.updated.rawValue).setValue(self.updated)
@@ -145,6 +146,7 @@ class Storage: ObservableObject {
         ref.child(myID).child(key.rawValue).setValue(date)
         if new {
             updated = Date.now.timeIntervalSinceReferenceDate
+            Storage.set(self.updated, for: .updated)
             ref.child(myID).child(Key.updated.rawValue).setValue(updated)
         }
     }
@@ -156,6 +158,7 @@ class Storage: ObservableObject {
         ref.child(myID).child(Key.projectStart.rawValue).setValue(projectStart)
         if new {
             updated = Date.now.timeIntervalSinceReferenceDate
+            Storage.set(self.updated, for: .updated)
             ref.child(myID).child(Key.updated.rawValue).setValue(updated)
         }
     }
@@ -167,6 +170,7 @@ class Storage: ObservableObject {
         ref.child(myID).child(Key.consumeStart.rawValue).setValue(consumeStart)
         if new {
             updated = Date.now.timeIntervalSinceReferenceDate
+            Storage.set(self.updated, for: .updated)
             ref.child(myID).child(Key.updated.rawValue).setValue(updated)
         }
     }
@@ -281,3 +285,4 @@ enum Key: String {
     case updated = "updated"
     case uuid = "uuid"
 }
+

@@ -240,8 +240,8 @@ struct TickerView: View {
                     if NSWorkspace.shared.frontmostApplication?.id == "com.apple.Safari" {
                         if let safari = NSWorkspace.shared.frontmostApplication, safari.id == "com.apple.Safari" {
                             let src = CGEventSource(stateID: .hidSystemState)
-                            CGEvent(keyboardEventSource: src, virtualKey: 3, keyDown: true)?.post(tap: .cghidEventTap)
-                            CGEvent(keyboardEventSource: src, virtualKey: 3, keyDown: false)?.post(tap: .cghidEventTap)
+                            CGEvent(keyboardEventSource: src, virtualKey: 53, keyDown: true)?.post(tap: .cghidEventTap)
+                            CGEvent(keyboardEventSource: src, virtualKey: 53, keyDown: false)?.post(tap: .cghidEventTap)
                         }
                     }
                 } else if cooldownTicker.flashing && cooldownTicker.start == consumeWarning {

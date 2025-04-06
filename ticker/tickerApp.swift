@@ -89,8 +89,8 @@ class MyWindow: NSWindow {
 //    }
 //}
 
-let projectKey = HotKey(key: .z, modifiers: [.option])
-let consumeKey = HotKey(key: .four, modifiers: [.option])
+//let projectKey = HotKey(key: .z, modifiers: [.option])
+//let consumeKey = HotKey(key: .four, modifiers: [.option])
 
 class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 //	var statusBar: StatusBarController?

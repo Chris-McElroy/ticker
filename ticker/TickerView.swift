@@ -156,30 +156,30 @@ struct TickerView: View {
             redrawWindows()
 //                    WindowHelper.refreshScripts()
         })
-        .onAppear {
-            projectKey.keyDownHandler = {
-                NSApplication.shared.activate(ignoringOtherApps: true)
-                guard CooldownTimer.projectState == .none && CooldownTimer.project == nil else {
-                    selectedTicker = tickers.count - 1
-                    Storage.set(selectedTicker, for: .selected)
-                    return
-                }
-                setTickers(tickers + [CooldownTimer(name: "", origin: .now, start: nil, offset: 0, visible: true, project: true, cooldown: false)])
-                selectedTicker = tickers.count - 1
-                Storage.set(selectedTicker, for: .selected)
-            }
-            consumeKey.keyDownHandler = {
-                NSApplication.shared.activate(ignoringOtherApps: true)
-                guard CooldownTimer.consumeState == .none && CooldownTimer.consume == nil else {
-                    selectedTicker = tickers.count - (CooldownTimer.project == nil ? 1 : 2)
-                    Storage.set(selectedTicker, for: .selected)
-                    return
-                }
-                setTickers(tickers + [CooldownTimer(name: "", origin: .now, start: nil, offset: 0, visible: true, project: false, cooldown: false)])
-                selectedTicker = tickers.count - (CooldownTimer.project == nil ? 1 : 2)
-                Storage.set(selectedTicker, for: .selected)
-            }
-        }
+//        .onAppear {
+//            projectKey.keyDownHandler = {
+//                NSApplication.shared.activate(ignoringOtherApps: true)
+//                guard CooldownTimer.projectState == .none && CooldownTimer.project == nil else {
+//                    selectedTicker = tickers.count - 1
+//                    Storage.set(selectedTicker, for: .selected)
+//                    return
+//                }
+//                setTickers(tickers + [CooldownTimer(name: "", origin: .now, start: nil, offset: 0, visible: true, project: true, cooldown: false)])
+//                selectedTicker = tickers.count - 1
+//                Storage.set(selectedTicker, for: .selected)
+//            }
+//            consumeKey.keyDownHandler = {
+//                NSApplication.shared.activate(ignoringOtherApps: true)
+//                guard CooldownTimer.consumeState == .none && CooldownTimer.consume == nil else {
+//                    selectedTicker = tickers.count - (CooldownTimer.project == nil ? 1 : 2)
+//                    Storage.set(selectedTicker, for: .selected)
+//                    return
+//                }
+//                setTickers(tickers + [CooldownTimer(name: "", origin: .now, start: nil, offset: 0, visible: true, project: false, cooldown: false)])
+//                selectedTicker = tickers.count - (CooldownTimer.project == nil ? 1 : 2)
+//                Storage.set(selectedTicker, for: .selected)
+//            }
+//        }
         .onAppear(perform: redrawWindows)
         .font(Font.custom("Baskerville", size: 14.0))
 	}
@@ -490,8 +490,25 @@ struct TickerView: View {
 //                    newTicker.offsetChange = showSeconds ? "\(change).0" : "\(change)"
 //                    setCurrentTicker(newTicker.offsetResolved())
 //				}
+            } else if event.characters == "u" {
+                guard CooldownTimer.projectState == .none && CooldownTimer.project == nil else {
+                    selectedTicker = tickers.count - 1
+                    Storage.set(selectedTicker, for: .selected)
+                    return
+                }
+                setTickers(tickers + [CooldownTimer(name: "", origin: .now, start: nil, offset: 0, visible: true, project: true, cooldown: false)])
+                selectedTicker = tickers.count - 1
+                Storage.set(selectedTicker, for: .selected)
+            } else if event.characters == "m" {
+                guard CooldownTimer.consumeState == .none && CooldownTimer.consume == nil else {
+                    selectedTicker = tickers.count - (CooldownTimer.project == nil ? 1 : 2)
+                    Storage.set(selectedTicker, for: .selected)
+                    return
+                }
+                setTickers(tickers + [CooldownTimer(name: "", origin: .now, start: nil, offset: 0, visible: true, project: false, cooldown: false)])
+                selectedTicker = tickers.count - (CooldownTimer.project == nil ? 1 : 2)
+                Storage.set(selectedTicker, for: .selected)
             }
-			
 			updater.toggle()
 			return
         } else if event.modifierFlags.contains(.option) { // TODO use hotkeys to have this trigger even out of app

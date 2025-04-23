@@ -38,6 +38,7 @@ struct TickerView: View {
     @State var consumeWarning: Date? = nil
     
     @State var screenResChanged = NotificationCenter.default.publisher(for: NSApplication.didChangeScreenParametersNotification)
+    let youtubeID = "com.apple.Safari.WebApp.D380587C-9309-4FB3-B3ED-3CD539EFA20B"
 	
     var tickers: [Ticker] {
         var temp = tickerHistory[tickerHistory.count - 1 - versionsBack]
@@ -237,8 +238,8 @@ struct TickerView: View {
             } else if !cooldownTicker.project {
                 if cooldownTicker.nearlyFlashing && cooldownTicker.start != consumeWarning {
                     consumeWarning = cooldownTicker.start
-                    if NSWorkspace.shared.frontmostApplication?.id == "com.apple.Safari" {
-                        if let safari = NSWorkspace.shared.frontmostApplication, safari.id == "com.apple.Safari" {
+                    if NSWorkspace.shared.frontmostApplication?.id == youtubeID {
+                        if let youtube = NSWorkspace.shared.frontmostApplication, youtube.id == youtubeID {
                             let src = CGEventSource(stateID: .hidSystemState)
                             CGEvent(keyboardEventSource: src, virtualKey: 53, keyDown: true)?.post(tap: .cghidEventTap)
                             CGEvent(keyboardEventSource: src, virtualKey: 53, keyDown: false)?.post(tap: .cghidEventTap)
@@ -246,8 +247,8 @@ struct TickerView: View {
                     }
                 } else if cooldownTicker.flashing && cooldownTicker.start == consumeWarning {
                     consumeWarning = nil
-                    if let safari = NSWorkspace.shared.frontmostApplication, safari.id == "com.apple.Safari" {
-                        safari.hide()
+                    if let youtube = NSWorkspace.shared.frontmostApplication, youtube.id == youtubeID {
+                        youtube.hide()
                         try! Process.run(shortcutsShellURL, arguments: ["run", "pause"], terminationHandler: nil)
                     }
                 }
@@ -374,7 +375,7 @@ struct TickerView: View {
                 setTickers([Ticker()] + tickers)
 				selectedTicker = 0
 				Storage.set(selectedTicker, for: .selected)
-			} else if event.characters == "v" {
+			} else if event.characters == "j" {
 				if let currentTicker {
 					currentTicker.visible.toggle()
 				}
@@ -490,7 +491,7 @@ struct TickerView: View {
 //                    newTicker.offsetChange = showSeconds ? "\(change).0" : "\(change)"
 //                    setCurrentTicker(newTicker.offsetResolved())
 //				}
-            } else if event.characters == "u" {
+            } else if event.characters == "v" {
                 guard CooldownTimer.projectState == .none && CooldownTimer.project == nil else {
                     selectedTicker = tickers.count - 1
                     Storage.set(selectedTicker, for: .selected)
@@ -499,7 +500,7 @@ struct TickerView: View {
                 setTickers(tickers + [CooldownTimer(name: "", origin: .now, start: nil, offset: 0, visible: true, project: true, cooldown: false)])
                 selectedTicker = tickers.count - 1
                 Storage.set(selectedTicker, for: .selected)
-            } else if event.characters == "m" {
+            } else if event.characters == "b" {
                 guard CooldownTimer.consumeState == .none && CooldownTimer.consume == nil else {
                     selectedTicker = tickers.count - (CooldownTimer.project == nil ? 1 : 2)
                     Storage.set(selectedTicker, for: .selected)

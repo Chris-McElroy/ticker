@@ -94,8 +94,8 @@ class MyWindow: NSWindow {
 
 class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 //	var statusBar: StatusBarController?
-	let activationKey = HotKey(key: .e, modifiers: [.control])
-    let quitKey = HotKey(key: .quote, modifiers: [.control])
+	let activationKey = HotKey(key: .c, modifiers: [.control])
+    let quitKey = HotKey(key: .c, modifiers: [.control, .option])
     
 	// vera's keys:
 //	let activationKey = HotKey(key: .z, modifiers: [.command, .option])

@@ -368,14 +368,14 @@ struct TickerView: View {
                 if let currentTicker {
                     setCurrentTicker(currentTicker.activityToggled())
                 }
-            } else if event.characters == "w" {
+            } else if event.characters == "h" {
                 NSApplication.shared.hide(nil)
                 NSApplication.shared.unhideWithoutActivation()
-            } else if event.characters == "e" {
+            } else if event.characters == "o" {
                 setTickers([Ticker()] + tickers)
 				selectedTicker = 0
 				Storage.set(selectedTicker, for: .selected)
-			} else if event.characters == "j" {
+			} else if event.characters == "m" {
 				if let currentTicker {
 					currentTicker.visible.toggle()
 				}
@@ -404,7 +404,7 @@ struct TickerView: View {
 			} else if event.characters == "t" {
 				showSeconds.toggle()
 				Storage.set(showSeconds, for: .showSeconds)
-			} else if event.characters == "f" {
+			} else if event.characters == "w" {
 				if tickers.count > selectedTicker {
 					var newTickers = tickers
                     if let cooldownTicker = currentTicker as? CooldownTimer {
@@ -491,24 +491,6 @@ struct TickerView: View {
 //                    newTicker.offsetChange = showSeconds ? "\(change).0" : "\(change)"
 //                    setCurrentTicker(newTicker.offsetResolved())
 //				}
-            } else if event.characters == "v" {
-                guard CooldownTimer.projectState == .none && CooldownTimer.project == nil else {
-                    selectedTicker = tickers.count - 1
-                    Storage.set(selectedTicker, for: .selected)
-                    return
-                }
-                setTickers(tickers + [CooldownTimer(name: "", origin: .now, start: nil, offset: 0, visible: true, project: true, cooldown: false)])
-                selectedTicker = tickers.count - 1
-                Storage.set(selectedTicker, for: .selected)
-            } else if event.characters == "b" {
-                guard CooldownTimer.consumeState == .none && CooldownTimer.consume == nil else {
-                    selectedTicker = tickers.count - (CooldownTimer.project == nil ? 1 : 2)
-                    Storage.set(selectedTicker, for: .selected)
-                    return
-                }
-                setTickers(tickers + [CooldownTimer(name: "", origin: .now, start: nil, offset: 0, visible: true, project: false, cooldown: false)])
-                selectedTicker = tickers.count - (CooldownTimer.project == nil ? 1 : 2)
-                Storage.set(selectedTicker, for: .selected)
             }
 			updater.toggle()
 			return
@@ -517,8 +499,26 @@ struct TickerView: View {
         }
 		
 		guard let currentTicker else { return }
-		
-		if event.characters == "+" {
+    
+        if event.characters == "*" {
+            guard CooldownTimer.projectState == .none && CooldownTimer.project == nil else {
+                selectedTicker = tickers.count - 1
+                Storage.set(selectedTicker, for: .selected)
+                return
+            }
+            setTickers(tickers + [CooldownTimer(name: "", origin: .now, start: nil, offset: 0, visible: true, project: true, cooldown: false)])
+            selectedTicker = tickers.count - 1
+            Storage.set(selectedTicker, for: .selected)
+        } else if event.characters == "^" {
+            guard CooldownTimer.consumeState == .none && CooldownTimer.consume == nil else {
+                selectedTicker = tickers.count - (CooldownTimer.project == nil ? 1 : 2)
+                Storage.set(selectedTicker, for: .selected)
+                return
+            }
+            setTickers(tickers + [CooldownTimer(name: "", origin: .now, start: nil, offset: 0, visible: true, project: false, cooldown: false)])
+            selectedTicker = tickers.count - (CooldownTimer.project == nil ? 1 : 2)
+            Storage.set(selectedTicker, for: .selected)
+        } else if event.characters == "+" {
 			currentTicker.offsetType = .pos
 			currentTicker.equivalentOffset = false
 			currentTicker.offsetChange = ""

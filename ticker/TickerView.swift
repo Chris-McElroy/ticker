@@ -222,20 +222,18 @@ struct TickerView: View {
 	
 	func monitorTickers() {
         for cooldownTicker in [CooldownTimer.project, CooldownTimer.consume].compactMap({ $0 }) {
-            if cooldownTicker.cooldown {
-                _ = cooldownTicker.getTimeString()
-                if !cooldownTicker.wasNegative {
-                    if let (i, _) = tickers.enumerated().first(where: { $0.element === cooldownTicker }) {
-                        var newTickers = tickers
-                        newTickers.remove(at: i)
-                        selectedTicker = min(max(selectedTicker, 0), newTickers.count - 1)
-                        setTickers(newTickers)
-                        Storage.set(selectedTicker, for: .selected)
-                    }
-                    cooldownTicker.state = .none
-                    Storage.set(cooldownTicker.state.rawValue, for: cooldownTicker.project ? .projectTimerState : .consumeTimerState)
+            _ = cooldownTicker.getTimeString()
+            if !cooldownTicker.wasNegative {
+                if let (i, _) = tickers.enumerated().first(where: { $0.element === cooldownTicker }) {
+                    var newTickers = tickers
+                    newTickers.remove(at: i)
+                    selectedTicker = min(max(selectedTicker, 0), newTickers.count - 1)
+                    setTickers(newTickers)
+                    Storage.set(selectedTicker, for: .selected)
                 }
-            } else if !cooldownTicker.project {
+                cooldownTicker.state = .none
+                Storage.set(cooldownTicker.state.rawValue, for: cooldownTicker.project ? .projectTimerState : .consumeTimerState)
+            } else if cooldownTicker.active { // TODO this is what i need to edit
                 if cooldownTicker.nearlyFlashing && cooldownTicker.start != consumeWarning {
                     consumeWarning = cooldownTicker.start
                     if NSWorkspace.shared.frontmostApplication?.id == youtubeID {
@@ -245,7 +243,7 @@ struct TickerView: View {
                             CGEvent(keyboardEventSource: src, virtualKey: 53, keyDown: false)?.post(tap: .cghidEventTap)
                         }
                     }
-                } else if cooldownTicker.flashing && cooldownTicker.start == consumeWarning {
+                } else if cooldownTicker.flashing && cooldownTicker.start == consumeWarning { // TODO move this up to the negative bit cuz it doesn't flash anymore, and make it more general than just youtube
                     consumeWarning = nil
                     if let youtube = NSWorkspace.shared.frontmostApplication, youtube.id == youtubeID {
                         youtube.hide()
@@ -497,9 +495,7 @@ struct TickerView: View {
         } else if event.modifierFlags.contains(.option) { // TODO use hotkeys to have this trigger even out of app
             //
         }
-		
-		guard let currentTicker else { return }
-    
+        
         if event.characters == "*" {
             guard CooldownTimer.projectState == .none && CooldownTimer.project == nil else {
                 selectedTicker = tickers.count - 1
@@ -509,6 +505,8 @@ struct TickerView: View {
             setTickers(tickers + [CooldownTimer(name: "", origin: .now, start: nil, offset: 0, visible: true, project: true, cooldown: false)])
             selectedTicker = tickers.count - 1
             Storage.set(selectedTicker, for: .selected)
+            updater.toggle()
+            return
         } else if event.characters == "^" {
             guard CooldownTimer.consumeState == .none && CooldownTimer.consume == nil else {
                 selectedTicker = tickers.count - (CooldownTimer.project == nil ? 1 : 2)
@@ -518,7 +516,13 @@ struct TickerView: View {
             setTickers(tickers + [CooldownTimer(name: "", origin: .now, start: nil, offset: 0, visible: true, project: false, cooldown: false)])
             selectedTicker = tickers.count - (CooldownTimer.project == nil ? 1 : 2)
             Storage.set(selectedTicker, for: .selected)
-        } else if event.characters == "+" {
+            updater.toggle()
+            return
+        }
+		
+		guard let currentTicker else { return }
+    
+        if event.characters == "+" {
 			currentTicker.offsetType = .pos
 			currentTicker.equivalentOffset = false
 			currentTicker.offsetChange = ""

@@ -130,7 +130,7 @@ class CooldownTimer: Ticker {
         else { CooldownTimer.consumeState = .cooldown }
         Storage.set(CooldownTimer.State.cooldown.rawValue, for: project ? .projectTimerState : .consumeTimerState)
         let start = Date.init(timeIntervalSinceReferenceDate: project ? Storage.main.projectEnd : Storage.main.consumeEnd)
-        let offset = -(project ? Storage.main.projectRatio*Storage.main.projectTime : Storage.main.consumeRatio*Storage.main.consumeTime)
+        let offset: TimeInterval = -900
         return CooldownTimer(name: "", origin: start, start: start, offset: offset, visible: true, project: project, cooldown: true)
     }
     

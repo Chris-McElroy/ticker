@@ -221,38 +221,38 @@ struct TickerView: View {
 //    }
 	
 	func monitorTickers() {
-        for cooldownTicker in [CooldownTimer.project, CooldownTimer.consume].compactMap({ $0 }) {
-            _ = cooldownTicker.getTimeString()
-            if !cooldownTicker.wasNegative {
-                if let (i, _) = tickers.enumerated().first(where: { $0.element === cooldownTicker }) {
-                    var newTickers = tickers
-                    newTickers.remove(at: i)
-                    selectedTicker = min(max(selectedTicker, 0), newTickers.count - 1)
-                    setTickers(newTickers)
-                    Storage.set(selectedTicker, for: .selected)
-                }
-                cooldownTicker.state = .none
-                Storage.set(cooldownTicker.state.rawValue, for: cooldownTicker.project ? .projectTimerState : .consumeTimerState)
-            } else if cooldownTicker.active { // TODO this is what i need to edit
-                if cooldownTicker.nearlyFlashing && cooldownTicker.start != consumeWarning {
-                    consumeWarning = cooldownTicker.start
-                    if NSWorkspace.shared.frontmostApplication?.id == youtubeID {
-                        if let youtube = NSWorkspace.shared.frontmostApplication, youtube.id == youtubeID {
-                            let src = CGEventSource(stateID: .hidSystemState)
-                            CGEvent(keyboardEventSource: src, virtualKey: 53, keyDown: true)?.post(tap: .cghidEventTap)
-                            CGEvent(keyboardEventSource: src, virtualKey: 53, keyDown: false)?.post(tap: .cghidEventTap)
-                        }
-                    }
-                } else if cooldownTicker.flashing && cooldownTicker.start == consumeWarning { // TODO move this up to the negative bit cuz it doesn't flash anymore, and make it more general than just youtube
-                    consumeWarning = nil
-                    if let youtube = NSWorkspace.shared.frontmostApplication, youtube.id == youtubeID {
-                        youtube.hide()
-                        try! Process.run(shortcutsShellURL, arguments: ["run", "pause"], terminationHandler: nil)
-                    }
-                }
-            }
-            
-        }
+//        for cooldownTicker in [CooldownTimer.project, CooldownTimer.consume].compactMap({ $0 }) {
+//            _ = cooldownTicker.getTimeString()
+//            if !cooldownTicker.wasNegative {
+//                if let (i, _) = tickers.enumerated().first(where: { $0.element === cooldownTicker }) {
+//                    var newTickers = tickers
+//                    newTickers.remove(at: i)
+//                    selectedTicker = min(max(selectedTicker, 0), newTickers.count - 1)
+//                    setTickers(newTickers)
+//                    Storage.set(selectedTicker, for: .selected)
+//                }
+//                cooldownTicker.state = .none
+//                Storage.set(cooldownTicker.state.rawValue, for: cooldownTicker.project ? .projectTimerState : .consumeTimerState)
+//            } else if cooldownTicker.active { // TODO this is what i need to edit
+//                if cooldownTicker.nearlyFlashing && cooldownTicker.start != consumeWarning {
+//                    consumeWarning = cooldownTicker.start
+//                    if NSWorkspace.shared.frontmostApplication?.id == youtubeID {
+//                        if let youtube = NSWorkspace.shared.frontmostApplication, youtube.id == youtubeID {
+//                            let src = CGEventSource(stateID: .hidSystemState)
+//                            CGEvent(keyboardEventSource: src, virtualKey: 53, keyDown: true)?.post(tap: .cghidEventTap)
+//                            CGEvent(keyboardEventSource: src, virtualKey: 53, keyDown: false)?.post(tap: .cghidEventTap)
+//                        }
+//                    }
+//                } else if cooldownTicker.flashing && cooldownTicker.start == consumeWarning { // TODO move this up to the negative bit cuz it doesn't flash anymore, and make it more general than just youtube
+//                    consumeWarning = nil
+//                    if let youtube = NSWorkspace.shared.frontmostApplication, youtube.id == youtubeID {
+//                        youtube.hide()
+//                        try! Process.run(shortcutsShellURL, arguments: ["run", "pause"], terminationHandler: nil)
+//                    }
+//                }
+//            }
+//            
+//        }
 		let hidingTicker = tickers.enumerated().first(where: { $0.element.flashing && !$0.element.name.contains("\\") })
 		let flashingTicker = tickers.enumerated().first(where: { $0.element.flashing && $0.element.name.contains("\\") })
         warning = tickers.contains(where: { $0.nearlyFlashing })
@@ -272,6 +272,13 @@ struct TickerView: View {
         }
 		
 		if let hidingTicker {
+            if consumeWarning != nil {
+                consumeWarning = nil
+                if let youtube = NSWorkspace.shared.runningApplications.first(where: { $0.id == youtubeID }) {
+                    youtube.hide()
+                    try! Process.run(shortcutsShellURL, arguments: ["run", "pause"], terminationHandler: nil)
+                }
+            }
 			if !hiding {
 				if !isActive {
 					selectedTicker = hidingTicker.offset
@@ -294,7 +301,7 @@ struct TickerView: View {
 		if let flashingTicker {
             if consumeWarning != nil {
                 consumeWarning = nil
-                if let youtube = NSWorkspace.shared.frontmostApplication, youtube.id == youtubeID {
+                if let youtube = NSWorkspace.shared.runningApplications.first(where: { $0.id == youtubeID }) {
                     youtube.hide()
                     try! Process.run(shortcutsShellURL, arguments: ["run", "pause"], terminationHandler: nil)
                 }

@@ -255,8 +255,21 @@ struct TickerView: View {
         }
 		let hidingTicker = tickers.enumerated().first(where: { $0.element.flashing && !$0.element.name.contains("\\") })
 		let flashingTicker = tickers.enumerated().first(where: { $0.element.flashing && $0.element.name.contains("\\") })
-        warning = tickers.enumerated().contains(where: { $0.element.nearlyFlashing })
+        warning = tickers.contains(where: { $0.nearlyFlashing })
         AppTimers.updateAppTimers(with: tickers)
+        
+        if consumeWarning == nil {
+            if let ticker = tickers.first(where: { $0.nearlyFlashing }) {
+                consumeWarning = ticker.start
+                if NSWorkspace.shared.frontmostApplication?.id == youtubeID {
+                    if let youtube = NSWorkspace.shared.frontmostApplication, youtube.id == youtubeID {
+                        let src = CGEventSource(stateID: .hidSystemState)
+                        CGEvent(keyboardEventSource: src, virtualKey: 53, keyDown: true)?.post(tap: .cghidEventTap)
+                        CGEvent(keyboardEventSource: src, virtualKey: 53, keyDown: false)?.post(tap: .cghidEventTap)
+                    }
+                }
+            }
+        }
 		
 		if let hidingTicker {
 			if !hiding {
@@ -279,6 +292,13 @@ struct TickerView: View {
 		}
 		
 		if let flashingTicker {
+            if consumeWarning != nil {
+                consumeWarning = nil
+                if let youtube = NSWorkspace.shared.frontmostApplication, youtube.id == youtubeID {
+                    youtube.hide()
+                    try! Process.run(shortcutsShellURL, arguments: ["run", "pause"], terminationHandler: nil)
+                }
+            }
 			if !flashing {
 				if hiding {
 					flashing = true
@@ -403,7 +423,8 @@ struct TickerView: View {
 				showSeconds.toggle()
 				Storage.set(showSeconds, for: .showSeconds)
 			} else if event.characters == "w" {
-				if tickers.count > selectedTicker {
+				if tickers.count > 0 {
+                    selectedTicker = min(max(selectedTicker, 0), tickers.count - 1)
 					var newTickers = tickers
                     if let cooldownTicker = currentTicker as? CooldownTimer {
                         if (cooldownTicker.project ? storage.projectCooldownEnd : storage.consumeCooldownEnd) < Date.now.timeIntervalSinceReferenceDate {

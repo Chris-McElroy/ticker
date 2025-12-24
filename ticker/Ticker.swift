@@ -88,7 +88,9 @@ class Ticker {
         if (self as? CooldownTimer) != nil {
             wasNegative = time < 0
         } else if !showTotals {
-			if wasNegative && time >= 0 {
+            nearlyFlashing = time < 0 && time > -15
+			
+            if wasNegative && time >= 0 {
 				flashing = true
 			}
 			
@@ -99,8 +101,6 @@ class Ticker {
 			if flashing && (posTime*2).truncatingRemainder(dividingBy: 2) < 1 {
 				return " "
 			}
-            
-            nearlyFlashing = time < 0 && time > -15
 		}
 		
 		let seconds = Int(posTime.rounded(.down)) % 60

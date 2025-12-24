@@ -261,24 +261,23 @@ struct TickerView: View {
         if consumeWarning == nil {
             if let ticker = tickers.first(where: { $0.nearlyFlashing }) {
                 consumeWarning = ticker.start
-                if NSWorkspace.shared.frontmostApplication?.id == youtubeID {
-                    if let youtube = NSWorkspace.shared.frontmostApplication, youtube.id == youtubeID {
-                        let src = CGEventSource(stateID: .hidSystemState)
-                        CGEvent(keyboardEventSource: src, virtualKey: 53, keyDown: true)?.post(tap: .cghidEventTap)
-                        CGEvent(keyboardEventSource: src, virtualKey: 53, keyDown: false)?.post(tap: .cghidEventTap)
-                    }
+                if NSWorkspace.shared.runningApplications.contains(where: { $0.id == youtubeID }) {
+                    Timer.scheduledTimer(withTimeInterval: 13, repeats: false, block: { _ in
+                        try! Process.run(shortcutsShellURL, arguments: ["run", "pause"], terminationHandler: nil)
+                    })
                 }
+//                if NSWorkspace.shared.frontmostApplication?.id == youtubeID {
+//                    if let youtube = NSWorkspace.shared.frontmostApplication, youtube.id == youtubeID {
+//                        let src = CGEventSource(stateID: .hidSystemState)
+//                        CGEvent(keyboardEventSource: src, virtualKey: 53, keyDown: true)?.post(tap: .cghidEventTap)
+//                        CGEvent(keyboardEventSource: src, virtualKey: 53, keyDown: false)?.post(tap: .cghidEventTap)
+//                    }
+//                }
             }
         }
 		
 		if let hidingTicker {
-            if consumeWarning != nil {
-                consumeWarning = nil
-                if let youtube = NSWorkspace.shared.runningApplications.first(where: { $0.id == youtubeID }) {
-                    youtube.hide()
-                    try! Process.run(shortcutsShellURL, arguments: ["run", "pause"], terminationHandler: nil)
-                }
-            }
+            consumeWarning = nil
 			if !hiding {
 				if !isActive {
 					selectedTicker = hidingTicker.offset
@@ -299,13 +298,7 @@ struct TickerView: View {
 		}
 		
 		if let flashingTicker {
-            if consumeWarning != nil {
-                consumeWarning = nil
-                if let youtube = NSWorkspace.shared.runningApplications.first(where: { $0.id == youtubeID }) {
-                    youtube.hide()
-                    try! Process.run(shortcutsShellURL, arguments: ["run", "pause"], terminationHandler: nil)
-                }
-            }
+            consumeWarning = nil
 			if !flashing {
 				if hiding {
 					flashing = true

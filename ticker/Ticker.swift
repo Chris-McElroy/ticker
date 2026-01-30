@@ -85,9 +85,10 @@ class Ticker {
 		let posTime = abs(time)
 //		validCountdown = time < 0 && time > -checkinThreshold && active
 		
-        if (self as? CooldownTimer) != nil {
-            wasNegative = time < 0
-        } else if !showTotals {
+//        if (self as? CooldownTimer) != nil {
+//            wasNegative = time < 0
+//        } else
+        if !showTotals {
             nearlyFlashing = time < 0 && time > -15
 			
             if wasNegative && time >= 0 {

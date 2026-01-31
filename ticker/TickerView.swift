@@ -610,8 +610,8 @@ struct TickerView: View {
 				for c in (event.characters ?? "").filter({ "0123456789.-;".contains($0) }) {
 					currentTicker.offsetChange?.append(c)
 				}
-//            } else if currentTicker as? CooldownTimer == nil {
-//				currentTicker.name += event.characters ?? ""
+            } else { // if currentTicker as? CooldownTimer == nil
+				currentTicker.name += event.characters ?? ""
 			}
 		}
 		
